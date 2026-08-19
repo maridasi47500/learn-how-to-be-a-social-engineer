@@ -1,0 +1,1478 @@
+<HTML
+><HEAD
+>
+<TITLE>[Chapter 6] 6.4 Cooperating with Other Languages</TITLE>
+<META
+NAME="DC.title"
+CONTENT="Programming Perl"><META
+NAME="DC.creator"
+CONTENT="Larry Wall, Tom Christiansen &amp; Randal L. Schwartz"><META
+NAME="DC.publisher"
+CONTENT="O'Reilly &amp; Associates, Inc."><META
+NAME="DC.date"
+CONTENT="1999-07-02T02:00:12Z"><META
+NAME="DC.type"
+CONTENT="Text.Monograph"><META
+NAME="DC.format"
+CONTENT="text/html"
+SCHEME="MIME"><META
+NAME="DC.source"
+CONTENT="1-56592-149-6"
+SCHEME="ISBN"><META
+NAME="DC.language"
+CONTENT="en-US"><META
+NAME="generator"
+CONTENT="Jade 1.1/O'Reilly DocBook 3.0 to HTML 4.0"><LINK
+REV="made"
+HREF="mailto:online-books@oreilly.com"
+TITLE="Online Books Comments"><LINK
+REL="up"
+HREF="ch06_01.htm"
+TITLE="6. Social Engineering"><LINK
+REL="prev"
+HREF="ch06_03.htm"
+TITLE="6.3 Cooperating with Strangers"><LINK
+REL="next"
+HREF="ch07_01.htm"
+TITLE="7. The Standard Perl Library"></HEAD
+><BODY
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+><DIV
+CLASS="htmlnav"
+><H1
+><IMG
+SRC="gifs/smbanner.gif"
+ALT="Programming Perl"
+USEMAP="#srchmap"
+BORDER="0"></H1
+><MAP
+NAME="srchmap"
+><AREA
+SHAPE="RECT"
+COORDS="0,0,466,65"
+HREF="index.htm"
+ALT="Programming Perl"><AREA
+SHAPE="RECT"
+COORDS="467,0,514,18"
+HREF="../search/psrch.htm"
+ALT="Search this book"></MAP
+><TABLE
+WIDTH="515"
+BORDER="0"
+CELLSPACING="0"
+CELLPADDING="0"
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+WIDTH="172"
+><A
+CLASS="SECT1"
+HREF="ch06_03.htm"
+TITLE="6.3 Cooperating with Strangers"
+><IMG
+SRC="../gifs/txtpreva.gif"
+ALT="Previous: 6.3 Cooperating with Strangers"
+BORDER="0"></A
+></TD
+><TD
+ALIGN="CENTER"
+VALIGN="TOP"
+WIDTH="171"
+><B
+><FONT
+FACE="ARIEL,HELVETICA,HELV,SANSERIF"
+SIZE="-1"
+><A
+CLASS="chapter"
+REL="up"
+HREF="ch06_01.htm"
+TITLE="6. Social Engineering"
+>Chapter 6<BR>Social Engineering</A
+></FONT
+></B
+></TD
+><TD
+ALIGN="RIGHT"
+VALIGN="TOP"
+WIDTH="172"
+><A
+CLASS="CHAPTER"
+HREF="ch07_01.htm"
+TITLE="7. The Standard Perl Library"
+><IMG
+SRC="../gifs/txtnexta.gif"
+ALT="Next: 7. The Standard Perl Library"
+BORDER="0"></A
+></TD
+></TR
+></TABLE
+>&nbsp;<HR
+ALIGN="LEFT"
+WIDTH="515"
+TITLE="footer"></DIV
+><DIV
+CLASS="SECT1"
+><H2
+CLASS="sect1"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-4"
+>6.4 Cooperating with Other Languages</A
+></H2
+><P
+CLASS="para"
+>Just as there are many levels on which languages can compete, so too
+there are many levels on which languages can cooperate.  Here we'll talk
+primarily about generation, translation and embedding (via linking).</P
+><DIV
+CLASS="sect2"
+><H3
+CLASS="sect2"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-4.1"
+>6.4.1 Program Generation</A
+></H3
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-18056"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-18058"
+></A
+>Almost from the time people first figured out that they could write programs,
+they started writing programs that write other programs.  These are called
+<EM
+CLASS="emphasis"
+>program generators</EM
+>.  (If you're a history buff, you might know that
+RPG stood for Report Program Generator long before it stood for Role
+Playing Game.)  Now, anyone who has written a program generator knows that it
+can make your eyes go crossed even when you're wide awake.  The problem
+is simply that much of your program's data looks like real code, but
+isn't (at least not yet).  The same text file contains both stuff that does
+something and similar looking stuff that doesn't.  Perl has various
+features that make it easier to mix it together with other languages,
+textually speaking.</P
+><P
+CLASS="para"
+>Of course, these features also make it easier to write Perl in Perl,
+but it's rather expected that Perl would cooperate with itself.</P
+><DIV
+CLASS="sect3"
+><H4
+CLASS="sect3"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-4.1.1"
+>6.4.1.1 Generating other languages in Perl</A
+></H4
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-18065"
+></A
+>Perl is, of course, a text-processing language, and most computer
+languages are textual.  Beyond that, the lack of arbitrary limits together 
+with the various quoting and interpolation mechanisms make it pretty easy to 
+visually isolate the code of the other language you're spitting out.
+For example, here is a small chunk of <EM
+CLASS="emphasis"
+>s2p</EM
+>, the
+<EM
+CLASS="emphasis"
+>sed</EM
+>-to-<EM
+CLASS="emphasis"
+>perl</EM
+> translator:</P
+><PRE
+CLASS="programlisting"
+>print &amp;q(&lt;&lt;&quot;EOT&quot;);
+:       #!$bin/perl
+:       eval 'exec $bin/perl -S \$0 \${1+&quot;\$@&quot;}'
+:               if \$running_under_some_shell;
+:       
+EOT</PRE
+><P
+CLASS="para"
+>Here the enclosed text happens to be legal in two languages, both Perl
+and shell.  We've used the trick of putting a colon and a tab on the
+front of every line, which visually isolates the enclosed code.  One
+variable, <CODE
+CLASS="literal"
+>$bin</CODE
+>, is interpolated in the multi-line quote in two
+places, and then the string is passed through a function to strip the
+colon and tab.</P
+><P
+CLASS="para"
+>Of course, you aren't required to use multi-line quotes.  One often sees
+CGI scripts containing millions of <A
+CLASS="xref"
+HREF="ch03_110.htm"
+TITLE="print"
+><B
+CLASS="xref.cmd"
+>print</B
+></A
+> statements, one per line.
+It seems a bit like driving to church in an F-16, but hey, if it gets
+you there....</P
+><P
+CLASS="para"
+>When you are embedding a large, multi-line quote containing some other
+language (such as HTML), it's sometimes helpful to pretend you're
+enclosing Perl into the other language instead:</P
+><PRE
+CLASS="programlisting"
+>print &lt;&lt;&quot;END&quot;;
+stuff
+blah blah blah ${ \( <CODE
+CLASS="replaceable"
+><I
+>EXPR</I
+></CODE
+> ) } blah blah blah
+blah blah blah @{[ <CODE
+CLASS="replaceable"
+><I
+>LIST</I
+></CODE
+> ]} blah blah blah
+nonsense
+END</PRE
+><P
+CLASS="para"
+>You can use either of those two tricks to interpolate the value of any
+scalar <CODE
+CLASS="replaceable"
+><I
+>EXPR</I
+></CODE
+> or <CODE
+CLASS="replaceable"
+><I
+>LIST</I
+></CODE
+> into a longer string.</P
+></DIV
+><DIV
+CLASS="sect3"
+><H4
+CLASS="sect3"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-4.1.2"
+>6.4.1.2 Generating Perl in other languages</A
+></H4
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-18086"
+></A
+>Perl can easily be generated in other languages because it's both concise
+and malleable.  You can pick your quotes not to interfere with the other
+language's quoting mechanisms.  You don't have to worry about
+indentation, or where you put your line breaks, or whether to backslash
+your backslashes yet again.  You aren't forced to define a package as a
+single string in advance, since you can slide into your package's namespace
+repeatedly, whenever you want to evaluate more code in that package.</P
+></DIV
+></DIV
+><DIV
+CLASS="sect2"
+><H3
+CLASS="sect2"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-4.2"
+>6.4.2 Translation from Other Languages</A
+></H3
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-18092"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-18095"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-18098"
+></A
+>One of the very first Perl applications was the <EM
+CLASS="emphasis"
+>sed</EM
+>-to-<EM
+CLASS="emphasis"
+>perl</EM
+> translator,
+<EM
+CLASS="emphasis"
+>s2p</EM
+>.  In fact, Larry delayed the initial release of Perl in order to
+complete <EM
+CLASS="emphasis"
+>s2p</EM
+> and <EM
+CLASS="emphasis"
+>awk-to-perl</EM
+> (<EM
+CLASS="emphasis"
+>a2p</EM
+>), because he thought they'd improve the
+acceptance of Perl.  Hmm, maybe they did.</P
+><DIV
+CLASS="sect3"
+><H4
+CLASS="sect3"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-4.2.1"
+>6.4.2.1 s2p</A
+></H4
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-18109"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-18111"
+></A
+>The <EM
+CLASS="emphasis"
+>s2p</EM
+> program takes a <EM
+CLASS="emphasis"
+>sed</EM
+> script specified on the command line
+(or from standard input) and produces a comparable Perl script on the
+standard output.</P
+><P
+CLASS="para"
+>Options include:</P
+><DL
+CLASS="variablelist"
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-D</B
+><EM
+CLASS="emphasis"
+>number</EM
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+>Sets debugging flags.</P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-n</B
+>   </DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+>Specifies that this <EM
+CLASS="emphasis"
+>sed</EM
+> script was <EM
+CLASS="emphasis"
+>always</EM
+> invoked as <EM
+CLASS="emphasis"
+>sed -n</EM
+>.
+Otherwise a switch parser is prepended to the front of the script.</P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-p</B
+>   </DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+>Specifies that this <EM
+CLASS="emphasis"
+>sed</EM
+> script was <EM
+CLASS="emphasis"
+>never</EM
+> invoked as <EM
+CLASS="emphasis"
+>sed -n</EM
+>.
+Otherwise a switch parser is prepended to the front of the script.</P
+></DD
+></DL
+><P
+CLASS="para"
+>The Perl script produced looks very <EM
+CLASS="emphasis"
+>sed</EM
+>-like, and there may very well
+be better ways to express what you want to do in Perl.  For instance,
+<EM
+CLASS="emphasis"
+>s2p</EM
+> does not make any use of the <A
+CLASS="xref"
+HREF="ch03_155.htm"
+TITLE="split"
+><B
+CLASS="xref.cmd"
+>split</B
+></A
+> operator, but you might
+want to.</P
+><P
+CLASS="para"
+>The Perl script you end up with may be either faster or slower than the
+original <EM
+CLASS="emphasis"
+>sed</EM
+> script.  If you're only interested in speed you'll just
+have to try it both ways.  Of course, if you want to do something <EM
+CLASS="emphasis"
+>sed</EM
+>
+doesn't do, you have no choice.  It's often possible to speed up the
+Perl script by various methods, such as deleting all references to <B
+CLASS="emphasis.bold"
+>$\</B
+>
+and <A
+CLASS="xref"
+HREF="ch03_014.htm"
+TITLE="chop"
+><B
+CLASS="xref.cmd"
+>chop</B
+></A
+>.</P
+></DIV
+><DIV
+CLASS="sect3"
+><H4
+CLASS="sect3"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-4.2.2"
+>6.4.2.2 a2p</A
+></H4
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="CH06.AWK1"
+></A
+><A
+CLASS="indexterm"
+NAME="CH06.AWK2"
+></A
+>The <EM
+CLASS="emphasis"
+>a2p</EM
+> program takes an <EM
+CLASS="emphasis"
+>awk</EM
+> script specified on the command line
+(or from standard input) and produces a comparable Perl script on the
+standard output.</P
+><P
+CLASS="para"
+>Options include:</P
+><DL
+CLASS="variablelist"
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-D</B
+><EM
+CLASS="emphasis"
+>number</EM
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+>Sets debugging flags.</P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-F</B
+><EM
+CLASS="emphasis"
+>character</EM
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+>Tells <EM
+CLASS="emphasis"
+>a2p</EM
+> that this <EM
+CLASS="emphasis"
+>awk</EM
+> script is always invoked with a <B
+CLASS="emphasis.bold"
+>-F</B
+>
+switch specifying <EM
+CLASS="emphasis"
+>character</EM
+>.</P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-n</B
+><EM
+CLASS="emphasis"
+>fieldlist</EM
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+>Specifies the names of the input fields if input does not have to be
+split into an array for some programmatic reason.  If you were
+translating an <EM
+CLASS="emphasis"
+>awk</EM
+> script that processes the password file, you might
+say:</P
+><PRE
+CLASS="programlisting"
+>a2p -7 -nlogin.password.uid.gid.gcos.shell.home</PRE
+><P
+CLASS="para"
+>Any delimiter may be used to separate the field names.</P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-</B
+><EM
+CLASS="emphasis"
+>number</EM
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+>Causes <EM
+CLASS="emphasis"
+>a2p</EM
+> to assume that input will always have that many fields.</P
+></DD
+></DL
+><P
+CLASS="para"
+><EM
+CLASS="emphasis"
+>a2p</EM
+> cannot do as good a job translating as a human would, but it
+usually does pretty well.  There are some areas where you may want to
+examine the Perl script produced and tweak it some.  Here are some of
+them, in no particular order.</P
+><P
+CLASS="para"
+>There is an <EM
+CLASS="emphasis"
+>awk</EM
+> idiom of putting <CODE
+CLASS="literal"
+>int(...)</CODE
+> around a string expression to
+force numeric interpretation, even though the argument is always an integer
+anyway.  This is generally unneeded in Perl, but <EM
+CLASS="emphasis"
+>a2p</EM
+> can't tell if
+the argument is always going to be an integer, so it leaves it in.  You may
+wish to remove it.</P
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-18200"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-18203"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-18206"
+></A
+>Perl differentiates numeric comparison from string comparison.  <EM
+CLASS="emphasis"
+>awk</EM
+> has
+one operator for both that decides at run-time which comparison to do.
+<EM
+CLASS="emphasis"
+>a2p</EM
+> does not try to do a complete job of <EM
+CLASS="emphasis"
+>awk</EM
+> emulation at this
+point.  Instead it guesses which one you want.  It's almost always
+right, but it can be spoofed.  All such guesses are marked with the
+comment <CODE
+CLASS="literal"
+>#???</CODE
+>.  You should go through and check them.  You might want
+to run at least once with Perl's <B
+CLASS="emphasis.bold"
+>-w</B
+> switch, which warns you if
+you use <CODE
+CLASS="literal"
+>==</CODE
+> where you should have used <B
+CLASS="emphasis.bold"
+>eq</B
+>.</P
+><P
+CLASS="para"
+>It would be possible to emulate <EM
+CLASS="emphasis"
+>awk</EM
+>'s behavior in selecting string
+versus numeric operations at run-time by inspection of the operands, but
+it would be gross and inefficient.  Besides, <EM
+CLASS="emphasis"
+>a2p</EM
+> almost always
+guesses right.</P
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-18220"
+></A
+>Perl does not attempt to emulate the behavior of <EM
+CLASS="emphasis"
+>awk</EM
+> in which
+nonexistent array elements spring into existence simply by being
+referenced.  If somehow you are relying on this mechanism to create null
+entries for a subsequent <CODE
+CLASS="literal"
+>for</CODE
+>...<CODE
+CLASS="literal"
+>in</CODE
+>, they won't be there in Perl.</P
+><P
+CLASS="para"
+>If <EM
+CLASS="emphasis"
+>a2p</EM
+> makes a <A
+CLASS="xref"
+HREF="ch03_155.htm"
+TITLE="split"
+><B
+CLASS="xref.cmd"
+>split</B
+></A
+> command that assigns to a list of variables
+that looks like <CODE
+CLASS="literal"
+>($Fld1, $Fld2, $Fld3...)</CODE
+> you may want to rerun <EM
+CLASS="emphasis"
+>a2p</EM
+>
+using the <B
+CLASS="emphasis.bold"
+>-n</B
+> option mentioned above.  This will let you name the
+fields throughout the script.  If it splits to an array instead, the
+script is probably referring to the number of fields somewhere.</P
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-18233"
+></A
+>The &quot;exit&quot; statement in <EM
+CLASS="emphasis"
+>awk</EM
+> doesn't necessarily exit; it
+goes to the <CODE
+CLASS="literal"
+>END</CODE
+> block if there is one.  <EM
+CLASS="emphasis"
+>awk</EM
+> scripts that
+do contortions within the <CODE
+CLASS="literal"
+>END</CODE
+> block to bypass the block
+under such circumstances can be simplified by removing the
+conditional in the <CODE
+CLASS="literal"
+>END</CODE
+> block and just exiting directly
+from the Perl script.</P
+><P
+CLASS="para"
+>Perl has two kinds of arrays, numerically indexed and associative.
+<EM
+CLASS="emphasis"
+>awk</EM
+> arrays are usually translated to associative arrays, but if you
+happen to know that the index is always going to be numeric, you could
+change the <CODE
+CLASS="literal"
+>{...}</CODE
+> to <CODE
+CLASS="literal"
+>[...]</CODE
+>.  Remember that iteration over an
+associative array is done using the <A
+CLASS="xref"
+HREF="ch03_079.htm"
+TITLE="keys"
+><B
+CLASS="xref.cmd"
+>keys</B
+></A
+> function, but iteration over
+a numeric array isn't.  You might need to modify any loop that is
+iterating over the array in question.</P
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-18246"
+></A
+><EM
+CLASS="emphasis"
+>awk</EM
+> starts by assuming OFMT has the value <CODE
+CLASS="literal"
+>%.6g</CODE
+>.  Perl starts by
+assuming its equivalent, <B
+CLASS="emphasis.bold"
+>$#</B
+>, to have the value <CODE
+CLASS="literal"
+>%.20g</CODE
+>.  You'll want to
+set <B
+CLASS="emphasis.bold"
+>$#</B
+> explicitly if you use the default value of OFMT.  (Actually,
+you probably don't want to set <B
+CLASS="emphasis.bold"
+>$#</B
+>, but rather put in <A
+CLASS="xref"
+HREF="ch03_111.htm"
+TITLE="printf"
+><B
+CLASS="xref.cmd"
+>printf</B
+></A
+> formats
+everywhere it matters.)</P
+><P
+CLASS="para"
+>Near the top of the line loop will be the <A
+CLASS="xref"
+HREF="ch03_155.htm"
+TITLE="split"
+><B
+CLASS="xref.cmd"
+>split</B
+></A
+> operator that is
+implicit in the <EM
+CLASS="emphasis"
+>awk</EM
+> script.  There are times when you can move this operator
+down past some conditionals that test the entire record, so that the
+<A
+CLASS="xref"
+HREF="ch03_155.htm"
+TITLE="split"
+><B
+CLASS="xref.cmd"
+>split</B
+></A
+> is not done as often.</P
+><P
+CLASS="para"
+>For aesthetic reasons you may wish to change the array base <B
+CLASS="emphasis.bold"
+>$[</B
+> from <CODE
+CLASS="literal"
+>1</CODE
+>
+back to Perl's default of <CODE
+CLASS="literal"
+>0</CODE
+>, but remember to change all array subscripts
+and all <A
+CLASS="xref"
+HREF="ch03_162.htm"
+TITLE="substr"
+><B
+CLASS="xref.cmd"
+>substr</B
+></A
+> and <A
+CLASS="xref"
+HREF="ch03_075.htm"
+TITLE="index"
+><B
+CLASS="xref.cmd"
+>index</B
+></A
+> operations to match.</P
+><P
+CLASS="para"
+>Cute comments that say:</P
+><PRE
+CLASS="programlisting"
+># Here's a workaround because awk is so dumb.</PRE
+><P
+CLASS="para"
+>are, of course, passed through unmodified.</P
+><P
+CLASS="para"
+><EM
+CLASS="emphasis"
+>awk</EM
+> scripts are often embedded in a shell script that pipes stuff
+into and out of <EM
+CLASS="emphasis"
+>awk</EM
+>.  Often the shell script wrapper can be
+incorporated into the Perl script, since Perl can start up pipes into
+and out of itself, and can do other things that <EM
+CLASS="emphasis"
+>awk</EM
+> can't do by
+itself.</P
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-18273"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-18275"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-18277"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-18280"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-18283"
+></A
+>Scripts that refer to the special variables <CODE
+CLASS="literal"
+>RSTART</CODE
+> and <CODE
+CLASS="literal"
+>RLENGTH</CODE
+> can often
+be simplified by referring to the variables <B
+CLASS="emphasis.bold"
+>$</B
+><CODE
+CLASS="userinput"
+><B
+>`</B
+></CODE
+>, <B
+CLASS="emphasis.bold"
+>$&amp;</B
+>, and <B
+CLASS="emphasis.bold"
+>$</B
+><CODE
+CLASS="userinput"
+><B
+>'</B
+></CODE
+>, as
+long as they are within the scope of the pattern match that sets them.</P
+><P
+CLASS="para"
+>The produced Perl script may have subroutines defined to
+deal with <EM
+CLASS="emphasis"
+>awk</EM
+>'s semantics regarding &quot;getline&quot; and &quot;print&quot;.
+Since <EM
+CLASS="emphasis"
+>a2p</EM
+> usually picks correctness over efficiency, it
+is almost always possible to rewrite such code to be more
+efficient by discarding the semantic sugar.</P
+><P
+CLASS="para"
+><CODE
+CLASS="literal"
+>ARGV[0]</CODE
+> translates to <B
+CLASS="emphasis.bold"
+>$0</B
+>, but <CODE
+CLASS="literal"
+>ARGV[n]</CODE
+> translates to
+<CODE
+CLASS="literal"
+>$ARGV[$n]</CODE
+>.  A loop that tries to iterate over <CODE
+CLASS="literal"
+>ARGV[0]</CODE
+> won't find it.</P
+><BLOCKQUOTE
+CLASS="note"
+><P
+CLASS="para"
+><STRONG
+>NOTE:</STRONG
+> Storage for the <EM
+CLASS="emphasis"
+>awk</EM
+> syntax tree is currently static, and can run out.
+You'll need to recompile <EM
+CLASS="emphasis"
+>a2p</EM
+> if that happens.</P
+></BLOCKQUOTE
+><A
+CLASS="indexterm"
+NAME="AUTOID-18306"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-18307"
+></A
+></DIV
+><DIV
+CLASS="sect3"
+><H4
+CLASS="sect3"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-4.2.3"
+>6.4.2.3 find2perl</A
+></H4
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-18311"
+></A
+>The <EM
+CLASS="emphasis"
+>find2perl</EM
+> program is really easy to understand if you already
+understand the UNIX <EM
+CLASS="emphasis"
+>find</EM
+>(1) program.  Just type <EM
+CLASS="emphasis"
+>find2perl</EM
+> instead
+of <EM
+CLASS="emphasis"
+>find</EM
+>, and give it the same arguments you would give to <EM
+CLASS="emphasis"
+>find</EM
+>.  It
+will spit out an equivalent Perl script.</P
+><P
+CLASS="para"
+>There are a couple of options you can use that your ordinary <EM
+CLASS="emphasis"
+>find</EM
+>(1)
+command probably doesn't support:</P
+><DL
+CLASS="variablelist"
+><DT
+CLASS="term"
+><CODE
+CLASS="literal"
+>-tar</CODE
+> <EM
+CLASS="emphasis"
+>tarfile</EM
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+>Outputs a tar file much like the <CODE
+CLASS="literal"
+>-cpio</CODE
+> switch of some versions of <EM
+CLASS="emphasis"
+>find</EM
+>.</P
+></DD
+><DT
+CLASS="term"
+><CODE
+CLASS="literal"
+>-eval</CODE
+> <EM
+CLASS="emphasis"
+>string</EM
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+>Evaluates the string as a Perl expression, and continues if true.</P
+></DD
+></DL
+></DIV
+><DIV
+CLASS="sect3"
+><H4
+CLASS="sect3"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-4.2.4"
+>6.4.2.4 Source filters</A
+></H4
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-18338"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-18340"
+></A
+>The notion of a source filter started with the idea that a script or
+module should be able to decrypt itself on the fly, like this:</P
+><PRE
+CLASS="programlisting"
+>#!/usr/bin/perl
+use MyDecryptFilter;
+@*x$]`0uN&amp;k^Zx02jZ^X{.?s!(f;9Q/^A^@~~8H]|,%@^P:q-=
+...</PRE
+><P
+CLASS="para"
+>But the idea grew from there, and now a source filter can be defined to
+do any transformation on the input text you like.  One can now even do
+things like this:</P
+><PRE
+CLASS="programlisting"
+>#!/usr/bin/perl
+use Filter::exec &quot;a2p&quot;;
+1,30{print $1}</PRE
+><P
+CLASS="para"
+>Put that together with the notion of the <B
+CLASS="emphasis.bold"
+>-x</B
+> switch mentioned at the
+beginning of this chapter, and you have a general mechanism for pulling
+any chunk of program out of an article and executing it, regardless of
+whether it's written in Perl or not.  Now that's cooperation.</P
+><P
+CLASS="para"
+>The Filter module is available from CPAN.</P
+></DIV
+></DIV
+><DIV
+CLASS="sect2"
+><H3
+CLASS="sect2"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-4.3"
+>6.4.3 Translation to Other Languages</A
+></H3
+><P
+CLASS="para"
+>Historically, the Perl interpreter has been rather self-contained.  When
+Perl was redesigned for Version 5, however, one of the requirements was
+that it be possible to write extension modules that could traverse the
+parsed syntax tree and emit code in other languages, either low-level
+or high-level.  This has now come to pass.</P
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-18352"
+></A
+>More precisely, this is now coming to pass.  Malcolm Beattie has been
+developing a &quot;real compiler&quot; for Perl.  As of this writing, it's in
+Alpha 2 state, which means it mostly works, except for the really hard
+bits.  The compiler consists of an ordinary Perl parser and
+interpreter (since you need to be able to execute <CODE
+CLASS="literal"
+>BEGIN</CODE
+> blocks to
+compile Perl), plus a set of modules under the name of B, which is short
+for both &quot;Backend&quot; and &quot;Beattie&quot;.  You don't actually invoke the B
+module directly though.  Instead you invoke a particular backend via the
+O module, which pulls in the B module for you.  Typically you invoke the
+O module right on the command line with the <B
+CLASS="emphasis.bold"
+>-M</B
+> switch, so a
+compilation command might look like this:</P
+><PRE
+CLASS="programlisting"
+>perl -MO=C foo.pl &gt;foo.c</PRE
+><P
+CLASS="para"
+>There are three backends at the moment.  The C backend rather woodenly
+spits out C calls into the ordinary Perl interpreter, but it can
+translate almost anything except the most egregious abuses of the
+dynamic capabilities of the interpreter.  The Bytecode module is also
+fairly complete, and spits out an external Perl bytecode representation,
+which can then be read back in and executed by a suitably clued version
+of Perl.  Finally, the CC backend attempts to translate into more
+idiomatic C with a lot of optimization.  Obviously, that's a bit harder
+to do than the other thing.  Nevertheless, it already works on a majority of
+the Perl regression tests.  It's possible with some care to get C code
+that runs considerably faster than Perl 5's interpreter, which is no
+slouch to begin with.  And Malcolm hasn't put in all the optimizations
+he wants to yet.</P
+><P
+CLASS="para"
+>This is an ongoing topic of research, but you'll want to keep track of
+it.  You are quite likely to be using this someday soon, if you aren't
+already.  Look for it on CPAN of course, if it's not already a part
+of the standard Perl distribution by the time you read this.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H3
+CLASS="sect2"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-4.4"
+>6.4.4 Embedding Perl in C and C++</A
+></H3
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-18362"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-18365"
+></A
+>Another part of the design of Perl 5 was that it be possible to embed a
+Perl interpreter in a C or C++ program.  And in fact, the ordinary
+<EM
+CLASS="emphasis"
+>perl</EM
+> executable pretends to have an embedded interpreter in it; the
+<CODE
+CLASS="literal"
+>main()</CODE
+> function essentially does this:</P
+><PRE
+CLASS="programlisting"
+>PerlInterpreter *my_perl;
+
+int main(int argc, char **argv)
+{
+    int exitstatus;
+
+    my_perl = perl_alloc();
+    perl_construct( my_perl );
+
+    exitstatus = perl_parse( my_perl, xs_init, argc, argv,
+                                          (char **) NULL );
+    if (exitstatus)
+        exit( exitstatus );
+
+    exitstatus = perl_run( my_perl );
+
+    perl_destruct( my_perl );
+    perl_free( my_perl );
+
+    exit(exitstatus);
+}</PRE
+><P
+CLASS="para"
+>The important parts are the calls to <CODE
+CLASS="literal"
+>perl_parse()</CODE
+> and <CODE
+CLASS="literal"
+>perl_run()</CODE
+>, which
+respectively compile and run the program.  If you were embedding Perl in
+your own program, you might replace the call to <CODE
+CLASS="literal"
+>perl_run()</CODE
+> with calls to
+<CODE
+CLASS="literal"
+>perl_call_sv()</CODE
+> function, which calls individual subroutines rather than
+the program as a whole.  Or you can do both, if the main script contains
+initialization code as well as subroutine definitions.</P
+><P
+CLASS="para"
+>There are many other useful entry points into the interpreter, such as
+<CODE
+CLASS="literal"
+>perl_eval_sv()</CODE
+>, which evaluates a string, but this chapter is already
+getting pretty long, and the fact of the matter is that there is
+extensive online documentation for the internals of Perl.  To include it
+here would make this book even more unwieldy than it is, and most people
+who would be embedding Perl aren't scared of online documentation.  See
+the <EM
+CLASS="emphasis"
+>perlembed</EM
+>(3) manpage for more on embedding Perl interpreters in your
+program.</P
+><P
+CLASS="para"
+>A number of programs in the real world already have Perl embedded in
+them&nbsp;- the authors know of several proprietary products shipping with
+embedded Perl interpreters.  There are also a couple of modules for the
+<EM
+CLASS="emphasis"
+>Apache</EM
+> HTTP servers that use an embedded Perl interpreter to avoid
+process startup costs on CGI-like scripting.  And then there's the version
+of Berkeley's <EM
+CLASS="emphasis"
+>nvi</EM
+> editor with a Perl engine in it.  Watch out,
+<EM
+CLASS="emphasis"
+>emacs</EM
+>, you've got company. <CODE
+CLASS="literal"
+>:-)</CODE
+></P
+></DIV
+><DIV
+CLASS="sect2"
+><H3
+CLASS="sect2"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-4.5"
+>6.4.5 Embedding C and C++ in Perl</A
+></H3
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-18386"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-18389"
+></A
+>If a respectable number of programs embed a Perl interpreter, then a
+veritable flood of extension modules embed C and C++ into Perl.  Again,
+the Perl distribution itself does this with many of its standard
+extension modules, including DB_File, DynaLoader, Fcntl, FileHandle,
+GDBM_File, NDBM_File, ODBM_File, POSIX, Safe, SDBM_File, and Socket.
+And many of the modules on CPAN do this.  So if you decide to do it
+yourself, you won't feel like you're researching a Ph.D. dissertation.</P
+><P
+CLASS="para"
+>And again, we only have space to give you teasers for the online
+documentation, which is exhaustively extensive.  We recommend you start
+with the <EM
+CLASS="emphasis"
+>perlxstut</EM
+>(3) manpage, which is a tutorial on the XS
+language, a preprocessor that spits out the glue routines you need to do
+the &quot;impedance matching&quot; between Perl and C or C++.  You'll also be
+interested in <EM
+CLASS="emphasis"
+>perlxs</EM
+>(3), <EM
+CLASS="emphasis"
+>perlguts</EM
+>(3), and <EM
+CLASS="emphasis"
+>perlcall</EM
+>(3).</P
+><P
+CLASS="para"
+>And once again, let us reiterate that your best resource is the Perl
+community itself.  They invented a lot of this stuff, and are emotionally
+committed to making you like it, whether you like it or not.  You'd better
+cooperate.</P
+></DIV
+></DIV
+><DIV
+CLASS="htmlnav"
+><P
+></P
+><HR
+ALIGN="LEFT"
+WIDTH="515"
+TITLE="footer"><TABLE
+WIDTH="515"
+BORDER="0"
+CELLSPACING="0"
+CELLPADDING="0"
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+WIDTH="172"
+><A
+CLASS="SECT1"
+HREF="ch06_03.htm"
+TITLE="6.3 Cooperating with Strangers"
+><IMG
+SRC="../gifs/txtpreva.gif"
+ALT="Previous: 6.3 Cooperating with Strangers"
+BORDER="0"></A
+></TD
+><TD
+ALIGN="CENTER"
+VALIGN="TOP"
+WIDTH="171"
+><A
+CLASS="book"
+HREF="index.htm"
+TITLE="Programming Perl"
+><IMG
+SRC="../gifs/txthome.gif"
+ALT="Programming Perl"
+BORDER="0"></A
+></TD
+><TD
+ALIGN="RIGHT"
+VALIGN="TOP"
+WIDTH="172"
+><A
+CLASS="CHAPTER"
+HREF="ch07_01.htm"
+TITLE="7. The Standard Perl Library"
+><IMG
+SRC="../gifs/txtnexta.gif"
+ALT="Next: 7. The Standard Perl Library"
+BORDER="0"></A
+></TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+WIDTH="172"
+>6.3 Cooperating with Strangers</TD
+><TD
+ALIGN="CENTER"
+VALIGN="TOP"
+WIDTH="171"
+><A
+CLASS="index"
+HREF="index/idx_0.htm"
+TITLE="Book Index"
+><IMG
+SRC="../gifs/index.gif"
+ALT="Book Index"
+BORDER="0"></A
+></TD
+><TD
+ALIGN="RIGHT"
+VALIGN="TOP"
+WIDTH="172"
+>7. The Standard Perl Library</TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="515"
+TITLE="footer"><P
+CLASS="nav"
+><FONT
+SIZE="-1"
+>[ <A
+HREF="../index.htm"
+TITLE="The Perl CD Bookshelf"
+>Library Home</A
+> | <A
+HREF="../perlnut/index.htm"
+TITLE="Perl in a Nutshell"
+>Perl in a Nutshell</A
+> | <A
+HREF="../learn/index.htm"
+TITLE="Learning Perl"
+>Learning Perl</A
+> | <A
+HREF="../learn32/index.htm"
+TITLE="Learning Perl on Win32 Systems"
+>Learning Perl on Win32</A
+> | <A
+HREF="index.htm"
+TITLE="Programming Perl"
+>Programming Perl</A
+> | <A
+HREF="../advprog/index.htm"
+TITLE="Advanced Perl Programming"
+>Advanced Perl Programming</A
+> | <A
+HREF="../cookbook/index.htm"
+TITLE="Perl Cookbook"
+>Perl Cookbook</A
+> ]</FONT
+></P
+></DIV
+></BODY
+></HTML
+>

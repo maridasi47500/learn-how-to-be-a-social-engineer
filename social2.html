@@ -1,0 +1,2357 @@
+<HTML
+><HEAD
+>
+<TITLE>[Chapter 6] 6.2 Cooperating with Other Processes</TITLE>
+<META
+NAME="DC.title"
+CONTENT="Programming Perl"><META
+NAME="DC.creator"
+CONTENT="Larry Wall, Tom Christiansen &amp; Randal L. Schwartz"><META
+NAME="DC.publisher"
+CONTENT="O'Reilly &amp; Associates, Inc."><META
+NAME="DC.date"
+CONTENT="1999-07-02T01:59:40Z"><META
+NAME="DC.type"
+CONTENT="Text.Monograph"><META
+NAME="DC.format"
+CONTENT="text/html"
+SCHEME="MIME"><META
+NAME="DC.source"
+CONTENT="1-56592-149-6"
+SCHEME="ISBN"><META
+NAME="DC.language"
+CONTENT="en-US"><META
+NAME="generator"
+CONTENT="Jade 1.1/O'Reilly DocBook 3.0 to HTML 4.0"><LINK
+REV="made"
+HREF="mailto:online-books@oreilly.com"
+TITLE="Online Books Comments"><LINK
+REL="up"
+HREF="ch06_01.htm"
+TITLE="6. Social Engineering"><LINK
+REL="prev"
+HREF="ch06_01.htm"
+TITLE="6.1 Cooperating with Command Interpreters"><LINK
+REL="next"
+HREF="ch06_03.htm"
+TITLE="6.3 Cooperating with Strangers"></HEAD
+><BODY
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+><DIV
+CLASS="htmlnav"
+><H1
+><IMG
+SRC="gifs/smbanner.gif"
+ALT="Programming Perl"
+USEMAP="#srchmap"
+BORDER="0"></H1
+><MAP
+NAME="srchmap"
+><AREA
+SHAPE="RECT"
+COORDS="0,0,466,65"
+HREF="index.htm"
+ALT="Programming Perl"><AREA
+SHAPE="RECT"
+COORDS="467,0,514,18"
+HREF="../search/psrch.htm"
+ALT="Search this book"></MAP
+><TABLE
+WIDTH="515"
+BORDER="0"
+CELLSPACING="0"
+CELLPADDING="0"
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+WIDTH="172"
+><A
+CLASS="SECT1"
+HREF="ch06_01.htm"
+TITLE="6.1 Cooperating with Command Interpreters"
+><IMG
+SRC="../gifs/txtpreva.gif"
+ALT="Previous: 6.1 Cooperating with Command Interpreters"
+BORDER="0"></A
+></TD
+><TD
+ALIGN="CENTER"
+VALIGN="TOP"
+WIDTH="171"
+><B
+><FONT
+FACE="ARIEL,HELVETICA,HELV,SANSERIF"
+SIZE="-1"
+><A
+CLASS="chapter"
+REL="up"
+HREF="ch06_01.htm"
+TITLE="6. Social Engineering"
+>Chapter 6<BR>Social Engineering</A
+></FONT
+></B
+></TD
+><TD
+ALIGN="RIGHT"
+VALIGN="TOP"
+WIDTH="172"
+><A
+CLASS="SECT1"
+HREF="ch06_03.htm"
+TITLE="6.3 Cooperating with Strangers"
+><IMG
+SRC="../gifs/txtnexta.gif"
+ALT="Next: 6.3 Cooperating with Strangers"
+BORDER="0"></A
+></TD
+></TR
+></TABLE
+>&nbsp;<HR
+ALIGN="LEFT"
+WIDTH="515"
+TITLE="footer"></DIV
+><DIV
+CLASS="SECT1"
+><H2
+CLASS="sect1"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-2"
+>6.2 Cooperating with Other Processes</A
+></H2
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="CH06.IPC1"
+></A
+><A
+CLASS="indexterm"
+NAME="CH06.IPC2"
+></A
+><A
+CLASS="indexterm"
+NAME="CH06.IPC3"
+></A
+>Processes have almost as many ways of communicating as
+people do.  But the difficulties of interprocess communication (IPC)
+should not be underestimated.  It doesn't do you any good to listen for
+verbal cues when your friend is using only body language.  Likewise, two
+processes can communicate only when they agree on the method of
+communication, and on the conventions built on top of that method.
+These layered conventions often gain the weight of &quot;methodhood&quot;
+themselves, so you'll sometimes hear people talking about <EM
+CLASS="emphasis"
+>stacks</EM
+> of
+communication methods.  We can't hope to cover all the methods used
+in the world today, but we'll discuss some of the methods most commonly
+used in Perl.</P
+><P
+CLASS="para"
+>The IPC facilities of Perl range from the very simple to the very
+complex.  Which facility you want to use depends on the complexity of
+the information to be communicated.  The simplest kind of information
+is, in a sense, no information at all, but just the awareness that a
+particular event has happened at a particular point in time.  In Perl,
+these events are communicated via a signal mechanism modeled on the UNIX
+signal system.</P
+><P
+CLASS="para"
+>At the other extreme, the socket facilities of Perl allow you to
+communicate with any other process on the Internet using any mutually
+supported protocol you like.  Naturally, this freedom comes at a price:
+you have to go through a number of steps to set up the connections and
+make sure you're talking the same language as the process on the other
+end, which may in turn require you to adhere to any number of other
+strange customs, depending on the cultural conventions at work.  To be
+protocoligorically correct, you might even be required to speak a
+language like HTML, or Java, or Perl.  Horrors.</P
+><P
+CLASS="para"
+>Sandwiched in between are some facilities intended primarily for
+communicating between processes on the same machine.  These include
+pipes, FIFOs, and the various System V IPC calls.</P
+><DIV
+CLASS="sect2"
+><H3
+CLASS="sect2"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-2.1"
+>6.2.1 Signals</A
+></H3
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="CH06.SIG1"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17433"
+></A
+>Perl uses a simple signal handling model: the <B
+CLASS="emphasis.bold"
+>%SIG</B
+> hash contains
+references (either symbolic or hard) to user-defined signal handlers.
+When an event transpires, the handler corresponding to that event is
+called with one argument containing the name of the signal that
+triggered it.  In order to send a signal to another process, you use
+the <A
+CLASS="xref"
+HREF="ch03_080.htm"
+TITLE="kill"
+><B
+CLASS="xref.cmd"
+>kill</B
+></A
+> function.  If that process has installed a signal handler,
+it can execute code when you send the signal, but there's no way to
+get a return value (other than knowing that the signal was successfully
+sent).</P
+><P
+CLASS="para"
+>We've classified this facility as a form of IPC, but in fact, signals
+can come from various sources, not just other processes.  A signal might
+come from another process, or from your own process, or it might be
+generated when the user at the keyboard types a particular sequence like
+CTRL-C or CTRL-Z, or it might be manufactured by the kernel when
+special events transpire, such as when a child process is exiting, or
+when your process is running out of stack space, or hitting a file size
+limit.[<A
+CLASS="footnote"
+HREF="#AUTOID-17438"
+>3</A
+>]
+But your own process can't easily distinguish among these
+cases.  A signal is like a package that arrives mysteriously on your
+doorstep with no return address.  You'd best open it carefully.</P
+><BLOCKQUOTE
+CLASS="footnote"
+><DIV
+CLASS="footnote"
+><P
+CLASS="para"
+><A
+CLASS="footnote"
+NAME="AUTOID-17438"
+>[3]</A
+> Nevertheless, these are all examples of cooperation with <EM
+CLASS="emphasis"
+>something</EM
+>,
+even if it's not another process.  Certainly, you tend to get more
+accomplished when you cooperate with your operating system.</P
+></DIV
+></BLOCKQUOTE
+><P
+CLASS="para"
+>For example, to unpack an interrupt signal, set up a handler like this:</P
+><PRE
+CLASS="programlisting"
+>sub catch_zap {
+    my $signame = shift;
+    $shucks++;
+    die &quot;Somebody sent me a SIG$signame!&quot;;
+} 
+$SIG{INT} = 'catch_zap';  # could fail outside of package main
+$SIG{INT} = \&amp;catch_zap;  # best strategy</PRE
+><P
+CLASS="para"
+>Notice how all we do in the signal handler
+is set a global variable and then raise an
+exception with <A
+CLASS="xref"
+HREF="ch03_027.htm"
+TITLE="die"
+><B
+CLASS="xref.cmd"
+>die</B
+></A
+>.  We try to avoid anything more complicated than
+that, because on most systems the C library is not re-entrant.  Signals
+are delivered asynchronously, so calling any <A
+CLASS="xref"
+HREF="ch03_110.htm"
+TITLE="print"
+><B
+CLASS="xref.cmd"
+>print</B
+></A
+> functions (or even
+anything that needs to <EM
+CLASS="emphasis"
+>malloc</EM
+>(3) more memory) could in theory trigger
+a memory fault and subsequent core dump if you were already in a related
+C library routine when the signal was delivered.  (Even the <A
+CLASS="xref"
+HREF="ch03_027.htm"
+TITLE="die"
+><B
+CLASS="xref.cmd"
+>die</B
+></A
+>
+routine is a bit unsafe unless the process is executing within
+an <A
+CLASS="xref"
+HREF="ch03_032.htm"
+TITLE="eval"
+><B
+CLASS="xref.cmd"
+>eval</B
+></A
+>, which suppresses the I/O from <A
+CLASS="xref"
+HREF="ch03_027.htm"
+TITLE="die"
+><B
+CLASS="xref.cmd"
+>die</B
+></A
+>, which keeps it
+from calling the C library.  Probably.)</P
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17451"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17454"
+></A
+>The operating system thinks of signals as numbers rather than names.
+To find the names of the signals, you can use the <CODE
+CLASS="literal"
+>kill -l</CODE
+>
+command on your system (if you're running UNIX).  Or you can retrieve
+them from Perl's Config module; the following snippet sets up two arrays: a
+<CODE
+CLASS="literal"
+>@signame</CODE
+> array indexed by number to get the signal name, and a
+<CODE
+CLASS="literal"
+>%signo</CODE
+> hash indexed by name to get the signal number:</P
+><PRE
+CLASS="programlisting"
+>use Config;
+defined $Config{sig_name} or die &quot;No sigs?&quot;;
+$i = 0;     # Config prepends fake 0 signal called &quot;ZERO&quot;.
+foreach $name (split(' ', $Config{sig_name})) {
+    $signo{$name} = $i;
+    $signame[$i] = $name;
+    $i++;
+}</PRE
+><P
+CLASS="para"
+>So to check whether signal 17 and <CODE
+CLASS="literal"
+>SIGALRM</CODE
+>
+are the same, you could do this:</P
+><PRE
+CLASS="programlisting"
+>print &quot;signal #17 = $signame[17]\n&quot;;
+if ($signo{ALRM}) { 
+    print &quot;SIGALRM is $signo{ALRM}\n&quot;;
+}</PRE
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17464"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17466"
+></A
+>You may also choose to assign either of the strings <CODE
+CLASS="literal"
+>'IGNORE'</CODE
+>
+or <CODE
+CLASS="literal"
+>'DEFAULT'</CODE
+> as the handler, in which case Perl will try to
+discard the signal or do the default thing.  Some signals can be neither
+trapped nor ignored, such as the <CODE
+CLASS="literal"
+>KILL</CODE
+> and
+<CODE
+CLASS="literal"
+>STOP</CODE
+> signals. You can temporarily ignore other signals
+by using a <A
+CLASS="xref"
+HREF="ch03_087.htm"
+TITLE="local"
+><B
+CLASS="xref.cmd"
+>local</B
+></A
+> signal handler assignment, which goes
+out of effect once your block is
+exited.  (Remember, though, that <A
+CLASS="xref"
+HREF="ch03_087.htm"
+TITLE="local"
+><B
+CLASS="xref.cmd"
+>local</B
+></A
+> values are inherited by
+functions called from within that block.)</P
+><PRE
+CLASS="programlisting"
+>sub precious {
+    local $SIG{INT} = 'IGNORE';
+    &amp;more_functions;
+} 
+sub more_functions {
+    # interrupts still ignored, for now...
+}</PRE
+><P
+CLASS="para"
+>Sending a signal to a negative process ID means that you send the signal
+to the entire UNIX process-group.  This code sends a hang-up signal to all
+processes in the current process group except for the current process
+itself:</P
+><PRE
+CLASS="programlisting"
+>{
+    local $SIG{HUP} = 'IGNORE';
+    kill HUP =&gt; -$$;   # snazzy form of: kill('HUP', -$$)
+}</PRE
+><P
+CLASS="para"
+>Another interesting signal to send is signal number <CODE
+CLASS="literal"
+>0</CODE
+>.  This doesn't
+actually affect the other process, but instead checks whether it's alive
+or has changed its UID.  That is, it checks whether it's legal to send
+a signal, without actually sending one.</P
+><PRE
+CLASS="programlisting"
+>unless (kill 0 =&gt; $kid_pid) {
+    warn &quot;something wicked happened to $kid_pid&quot;;
+}</PRE
+><P
+CLASS="para"
+>Another cute trick is to employ anonymous functions for simple signal
+handlers:</P
+><PRE
+CLASS="programlisting"
+>$SIG{INT} = sub { die &quot;\nOutta here!\n&quot; };</PRE
+><P
+CLASS="para"
+>Because it's a subroutine without a name,
+this approach can be problematic for complicated handlers that need to
+reinstall themselves.  That's because Perl's signal mechanism was
+historically based on the <EM
+CLASS="emphasis"
+>signal</EM
+>(3) function from the C library.
+On some systems, this function was broken; that is, it behaved in the
+unreliable System V way rather than the reliable BSD (and POSIX)
+fashion.  This meant that you had to reinstall the signal handler each
+time it got called.[<A
+CLASS="footnote"
+HREF="#AUTOID-17484"
+>4</A
+>]
+You also had to manually restart interrupted
+system calls.  Careful programmers tend to write self-referential
+handlers that reinstall themselves:</P
+><BLOCKQUOTE
+CLASS="footnote"
+><DIV
+CLASS="footnote"
+><P
+CLASS="para"
+><A
+CLASS="footnote"
+NAME="AUTOID-17484"
+>[4]</A
+> If you were lucky.  The old signal behavior had a race condition
+whereby you couldn't guarantee that you could reset your handler in
+time before the next signal came in, which is why it was changed.</P
+></DIV
+></BLOCKQUOTE
+><PRE
+CLASS="programlisting"
+>sub REAPER { 
+    $waitedpid = wait;
+    $SIG{CHLD} = \&amp;REAPER;  # loathe sysV
+}
+$SIG{CHLD} = \&amp;REAPER;
+# now do something that forks...</PRE
+><P
+CLASS="para"
+>or, somewhat more elaborately:[<A
+CLASS="footnote"
+HREF="#AUTOID-17488"
+>5</A
+>]</P
+><BLOCKQUOTE
+CLASS="footnote"
+><DIV
+CLASS="footnote"
+><P
+CLASS="para"
+><A
+CLASS="footnote"
+NAME="AUTOID-17488"
+>[5]</A
+> Although it seems unlikely that you would have POSIX 
+<CODE
+CLASS="literal"
+>WNOHANG</CODE
+> <A
+CLASS="xref"
+HREF="ch03_190.htm"
+TITLE="waitpid"
+><B
+CLASS="xref.cmd"
+>waitpid</B
+></A
+> behavior while lacking proper POSIX signals.</P
+></DIV
+></BLOCKQUOTE
+><PRE
+CLASS="programlisting"
+>use POSIX &quot;sys_wait_h&quot;;
+sub REAPER { 
+    $SIG{CHLD} = \&amp;REAPER;  # loathe sysV, dream of real POSIX
+    my $child;
+    while ($child = waitpid(-1, WNOHANG)) {
+        $Kid_Status{$child} = $?;
+    } 
+}
+$SIG{CHLD} = \&amp;REAPER;
+# do something that forks...</PRE
+><P
+CLASS="para"
+>And if you're writing code to behave the same way everywhere, even on
+rather old systems, it all gets more complex yet.  Loops with blocking
+system calls (like <CODE
+CLASS="literal"
+>&lt;FILE&gt;</CODE
+> or <A
+CLASS="xref"
+HREF="ch03_004.htm"
+TITLE="accept"
+><B
+CLASS="xref.cmd"
+>accept</B
+></A
+>) need additional logic
+to handle system calls that return failure for silly reasons, such as
+when your <CODE
+CLASS="literal"
+>SIGCHLD</CODE
+> handler triggers and you reap a moribund child
+process.</P
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17498"
+></A
+>Fortunately, you shouldn't have to do that much any more.  That's because
+whenever possible, Perl now uses the reliable <EM
+CLASS="emphasis"
+>sigaction</EM
+>(2)
+function from POSIX.  If you know you're running on a system that supports
+<EM
+CLASS="emphasis"
+>sigaction</EM
+>(2), you won't have to reinstall your handlers, and a lot
+of other things will work out better, too.  For example, &quot;slow&quot; system
+calls (ones that can block, like <A
+CLASS="xref"
+HREF="ch03_116.htm"
+TITLE="read"
+><B
+CLASS="xref.cmd"
+>read</B
+></A
+>, <CODE
+CLASS="literal"
+>&lt;STDIN&gt;</CODE
+>, <A
+CLASS="xref"
+HREF="ch03_189.htm"
+TITLE="wait"
+><B
+CLASS="xref.cmd"
+>wait</B
+></A
+>,
+and <A
+CLASS="xref"
+HREF="ch03_004.htm"
+TITLE="accept"
+><B
+CLASS="xref.cmd"
+>accept</B
+></A
+>) will restart automatically now if they get interrupted
+by a signal. This is generally construed to be a feature.</P
+><P
+CLASS="para"
+>You check whether you have the more rigorous POSIX-style signal
+behavior by accessing the Config module, described in <A
+CLASS="xref"
+HREF="ch07_01.htm"
+TITLE="The Standard Perl Library"
+>Chapter 7, <CITE
+CLASS="chapter"
+>The Standard Perl Library</CITE
+></A
+>.</P
+><PRE
+CLASS="programlisting"
+>use Config;
+print &quot;Hurray!\n&quot; if $Config{d_sigaction};</PRE
+><P
+CLASS="para"
+>This will tell you whether you have reliable system calls that don't need
+to be reinstalled, but it won't tell you whether they're restartable.
+Perl doesn't provide that information in its Config module, but
+you could check out your system's C <EM
+CLASS="emphasis"
+>signal.h</EM
+> include file directly:</P
+><PRE
+CLASS="programlisting"
+>egrep 'S[AV]_(RESTART|INTERRUPT)' /usr/include/*/signal.h</PRE
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17513"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17516"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17519"
+></A
+>On some older SysV systems, a simple but nonportable hack for avoiding
+zombies
+was to set <CODE
+CLASS="literal"
+>$SIG{CHLD}</CODE
+> to <CODE
+CLASS="literal"
+>'IGNORE'</CODE
+>.  This approach does not work
+on systems with <EM
+CLASS="emphasis"
+>sigaction</EM
+>(2).  Instead, the best way to avoid zombies
+on POSIX systems is to use the <CODE
+CLASS="literal"
+>REAPER()</CODE
+> function above.</P
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17526"
+></A
+>You can also use signals to impose time limits on long-running operations.  If you're
+on a UNIX system (or any other system that supports the <CODE
+CLASS="literal"
+>ALRM</CODE
+> signal),
+you can ask the kernel to send your process an <CODE
+CLASS="literal"
+>ALRM</CODE
+>
+at some point in the future:</P
+><PRE
+CLASS="programlisting"
+>eval { 
+    local $SIG{ALRM} = sub { die &quot;alarm clock restart&quot; };
+    alarm 10;       # schedule alarm in 10 seconds 
+    flock(FH, 2);   # a &quot;write&quot; lock that may block
+    alarm 0;        # cancel the alarm
+};
+if ($@ and $@ !~ /alarm clock restart/) { die }</PRE
+><P
+CLASS="para"
+><A
+CLASS="xref"
+HREF="ch03_032.htm"
+TITLE="eval"
+><B
+CLASS="xref.cmd"
+>eval</B
+></A
+> and <A
+CLASS="xref"
+HREF="ch03_027.htm"
+TITLE="die"
+><B
+CLASS="xref.cmd"
+>die</B
+></A
+> provide a convenient mechanism for aborting the
+<A
+CLASS="xref"
+HREF="ch03_039.htm"
+TITLE="flock"
+><B
+CLASS="xref.cmd"
+>flock</B
+></A
+> if it hangs.</P
+><P
+CLASS="para"
+>For more complex signal handling, see the POSIX module in <A
+CLASS="xref"
+HREF="ch07_01.htm"
+TITLE="The Standard Perl Library"
+>Chapter 7</A
+>.  This
+module provides an object-oriented approach to signals that gives you
+complete access to low-level system behavior.</P
+><A
+CLASS="indexterm"
+NAME="AUTOID-17538"
+></A
+></DIV
+><DIV
+CLASS="sect2"
+><H3
+CLASS="sect2"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-2.2"
+>6.2.2 Pipes</A
+></H3
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="CH06.PIPE1"
+></A
+><A
+CLASS="indexterm"
+NAME="CH06.PIPE2"
+></A
+><A
+CLASS="indexterm"
+NAME="CH06.PIPE3"
+></A
+>A <EM
+CLASS="emphasis"
+>pipe</EM
+> is a unidirectional I/O channel that can transfer a stream of
+bytes from one process to another.  They come in both named and nameless
+varieties.  You may be more familiar with nameless pipes, so we'll talk
+about those first.</P
+><DIV
+CLASS="sect3"
+><H4
+CLASS="sect3"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-2.2.1"
+>6.2.2.1 Anonymous pipes</A
+></H4
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17554"
+></A
+>Perl's <A
+CLASS="xref"
+HREF="ch03_102.htm"
+TITLE="open"
+><B
+CLASS="xref.cmd"
+>open</B
+></A
+> function opens a pipe instead of a file when you
+append or prepend a pipe symbol to the second argument to <A
+CLASS="xref"
+HREF="ch03_102.htm"
+TITLE="open"
+><B
+CLASS="xref.cmd"
+>open</B
+></A
+>.
+This turns the rest of the argument into a command, which will be
+interpreted as a process (or set of processes) to pipe a stream of data
+either into or out of.  Here's how to start up a child process that
+you intend to write to:</P
+><PRE
+CLASS="programlisting"
+>open SPOOLER, &quot;| cat -v | lpr -h 2&gt;/dev/null&quot;
+                or die &quot;can't fork: $!&quot;;
+local $SIG{PIPE} = sub { die &quot;spooler pipe broke&quot; };
+print SPOOLER &quot;stuff\n&quot;;
+close SPOOLER or die &quot;bad spool: $! $?&quot;;</PRE
+><P
+CLASS="para"
+>This example is actually starting up two processes, the first of which
+(running <EM
+CLASS="emphasis"
+>cat</EM
+>) we print to directly.  The second process (running
+<EM
+CLASS="emphasis"
+>lpr</EM
+>) then receives the output of
+the first process.  In shell programming this is often called a <EM
+CLASS="emphasis"
+>pipeline</EM
+>.
+A pipeline can have as many processes in a row as you like.</P
+><P
+CLASS="para"
+>And here's how to start up a child process that you intend to read from:</P
+><PRE
+CLASS="programlisting"
+>open STATUS, &quot;netstat -an 2&gt;&amp;1 |&quot;
+                or die &quot;can't fork: $!&quot;;
+while (&lt;STATUS&gt;) {
+    next if /^(tcp|udp)/;
+    print;
+} 
+close STATUS or die &quot;bad netstat: $! $?&quot;;</PRE
+><P
+CLASS="para"
+>You can open a pipeline for input just as you can for output, but we
+don't show it in this example.</P
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17568"
+></A
+>You might have noticed that you can use backticks to accomplish the
+same effect as opening a pipe for reading:</P
+><PRE
+CLASS="programlisting"
+>print grep { !/^(tcp|udp)/ } `netstat -an 2&gt;&amp;1`;
+die &quot;bad netstat&quot; if $?;</PRE
+><P
+CLASS="para"
+>While this is true, it's often more efficient to process the file one
+line or record at a time, because then Perl doesn't have to read the
+whole thing into memory at once. It also gives you finer control of the
+whole operation, letting you kill off the child process early if you
+like.</P
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17573"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17575"
+></A
+>Be careful to check the return values of both <A
+CLASS="xref"
+HREF="ch03_102.htm"
+TITLE="open"
+><B
+CLASS="xref.cmd"
+>open</B
+></A
+> 
+and <A
+CLASS="xref"
+HREF="ch03_018.htm"
+TITLE="close"
+><B
+CLASS="xref.cmd"
+>close</B
+></A
+>.  (If
+you're writing to a pipe, you should also be prepared to handle the
+PIPE signal, which is sent to you if the process on the other end dies
+before you're done sending to it.)  The reason you need to check both
+the <A
+CLASS="xref"
+HREF="ch03_102.htm"
+TITLE="open"
+><B
+CLASS="xref.cmd"
+>open</B
+></A
+> and the <A
+CLASS="xref"
+HREF="ch03_018.htm"
+TITLE="close"
+><B
+CLASS="xref.cmd"
+>close</B
+></A
+> 
+has to do with an idiosyncrasy of UNIX in
+how piped commands are started up.  When you do the <A
+CLASS="xref"
+HREF="ch03_102.htm"
+TITLE="open"
+><B
+CLASS="xref.cmd"
+>open</B
+></A
+>, your
+process forks a child process that is in charge of executing the command
+you gave it.  The <EM
+CLASS="emphasis"
+>fork</EM
+>(2) system call, if successful, returns<A
+CLASS="indexterm"
+NAME="AUTOID-17583"
+></A
+>
+immediately within the parent process, and the parent script leaves the
+<A
+CLASS="xref"
+HREF="ch03_102.htm"
+TITLE="open"
+><B
+CLASS="xref.cmd"
+>open</B
+></A
+> function successfully, even though the child process may not
+have even run yet.  By the time the child process actually tries to run
+the command, it's already a separately scheduled process.  So if it
+fails to execute the command, it has no easy way to communicate the fact
+back to the <A
+CLASS="xref"
+HREF="ch03_102.htm"
+TITLE="open"
+><B
+CLASS="xref.cmd"
+>open</B
+></A
+> statement, which may have already exited
+successfully in the parent.  The way the disaster is finally
+communicated back to the parent is the same way that any other disaster
+in the child process is communicated back: namely, the exit status of
+the child process is harvested by the parent process when it eventually
+does a <EM
+CLASS="emphasis"
+>wait</EM
+>(2) system call.  But this happens in the <A
+CLASS="xref"
+HREF="ch03_018.htm"
+TITLE="close"
+><B
+CLASS="xref.cmd"
+>close</B
+></A
+>
+function, not the <A
+CLASS="xref"
+HREF="ch03_102.htm"
+TITLE="open"
+><B
+CLASS="xref.cmd"
+>open</B
+></A
+> function.  And that's why you have to check
+the return value of your <A
+CLASS="xref"
+HREF="ch03_018.htm"
+TITLE="close"
+><B
+CLASS="xref.cmd"
+>close</B
+></A
+> function.  Whew.</P
+></DIV
+><DIV
+CLASS="sect3"
+><H4
+CLASS="sect3"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-2.2.2"
+>6.2.2.2 Talking to yourself</A
+></H4
+><P
+CLASS="para"
+>Another approach to IPC is to make your program talk to itself, in a
+manner of speaking.  Actually, your process talks to a forked copy of
+itself.  It works much like the piped open we talked about in the last
+section, except that the child process continues executing your script
+instead of trying to execute some other command.</P
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17595"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17598"
+></A
+>To represent this to the <A
+CLASS="xref"
+HREF="ch03_102.htm"
+TITLE="open"
+><B
+CLASS="xref.cmd"
+>open</B
+></A
+> function, you use a pseudo-command
+consisting of a minus.  So the second argument to <A
+CLASS="xref"
+HREF="ch03_102.htm"
+TITLE="open"
+><B
+CLASS="xref.cmd"
+>open</B
+></A
+> looks like
+either &quot;<CODE
+CLASS="literal"
+>-|</CODE
+>&quot; or &quot;<CODE
+CLASS="literal"
+>|-</CODE
+>&quot;, depending on whether you want to pipe from
+yourself or to yourself.  The <A
+CLASS="xref"
+HREF="ch03_102.htm"
+TITLE="open"
+><B
+CLASS="xref.cmd"
+>open</B
+></A
+> function returns the child's
+process ID in
+the parent process, but <CODE
+CLASS="literal"
+>0</CODE
+> in the child process.  Another asymmetry
+is that the filehandle is used only in the parent process.  The child's
+end of the pipe is hooked to either <CODE
+CLASS="literal"
+>STDIN</CODE
+> or <CODE
+CLASS="literal"
+>STDOUT</CODE
+>
+as appropriate.
+That is, if you open a pipe <EM
+CLASS="emphasis"
+>to</EM
+> minus, you can write to the filehandle
+you opened and your kid will find it in his <CODE
+CLASS="literal"
+>STDIN</CODE
+>.  If you open a pipe
+<EM
+CLASS="emphasis"
+>from</EM
+> minus, you can read from the filehandle you opened whatever your
+kid writes to her <CODE
+CLASS="literal"
+>STDOUT</CODE
+>.</P
+><P
+CLASS="para"
+>This is useful for safely opening a file when running under an
+assumed UID or GID, for example:<A
+CLASS="indexterm"
+NAME="AUTOID-17614"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17616"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17618"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17621"
+></A
+></P
+><PRE
+CLASS="programlisting"
+>use English;
+my $sleep_count = 0;
+
+do { 
+    $pid = open(KID_TO_WRITE, &quot;|-&quot;);
+    unless (defined $pid) {
+        warn &quot;cannot fork: $!&quot;;
+        die &quot;bailing out&quot; if $sleep_count++ &gt; 6;
+        sleep 10;
+    } 
+} until defined $pid;
+
+if ($pid) {  # parent
+    print KID_TO_WRITE @some_data;
+    close(KID_TO_WRITE) or warn &quot;kid exited $?&quot;;
+}
+else {       # child
+    ($EUID, $EGID) = ($UID, $GID); # suid progs only
+    open (FILE, &quot;&gt; /safe/file&quot;) 
+                    or die &quot;can't open /safe/file: $!&quot;;
+    while (&lt;STDIN&gt;) {
+        print FILE; # child's STDIN is parent's KID
+    } 
+    exit;  # don't forget this
+}</PRE
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17626"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17629"
+></A
+>Another common use for this construct is to bypass the shell when you
+want to open a pipe from a command.  You might want to do this for
+security reasons, because you don't want the shell interpreting any
+metacharacters in the filenames you're trying to pass to the command.
+We give an example of this later in the chapter&nbsp;- see &quot;Cleaning Up Your Path&quot;.</P
+><P
+CLASS="para"
+>Note that these operations are full UNIX forks, which means they may not be
+correctly implemented on alien systems.  Additionally, these are not true
+multi-threading.  If you'd like to learn more about threading, see
+CPAN.</P
+></DIV
+><DIV
+CLASS="sect3"
+><H4
+CLASS="sect3"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-2.2.3"
+>6.2.2.3 Bidirectional communication</A
+></H4
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17636"
+></A
+>While pipes work reasonably well for unidirectional communication, what
+about bidirectional communication?  The obvious thing you'd like to do
+doesn't actually work:</P
+><PRE
+CLASS="programlisting"
+>open(PROG_FOR_READING_AND_WRITING, &quot;| some program |&quot;)  # WRONG!</PRE
+><P
+CLASS="para"
+>and if you forget to use the <B
+CLASS="emphasis.bold"
+>-w</B
+> switch, then you'll miss out 
+entirely on the diagnostic message:</P
+><PRE
+CLASS="programlisting"
+>Can't do bidirectional pipe at myprog line 3.</PRE
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17643"
+></A
+>The <A
+CLASS="xref"
+HREF="ch03_102.htm"
+TITLE="open"
+><B
+CLASS="xref.cmd"
+>open</B
+></A
+> function won't allow this because it's rather error prone unless
+you know what you're doing, and can easily result in deadlock, which
+we'll explain later.  But if you really want to do it, you can use the
+standard IPC::Open2 library module to attach two pipes to a subprocess's
+<CODE
+CLASS="literal"
+>STDIN</CODE
+> and <CODE
+CLASS="literal"
+>STDOUT</CODE
+>.  There's also an IPC::Open3 module for tridirectional
+I/O (allowing you to catch your child's <CODE
+CLASS="literal"
+>STDERR</CODE
+>), but this
+requires an awkward <B
+CLASS="emphasis.bold"
+>select</B
+> loop and doesn't allow you
+to use normal Perl input operations.</P
+><P
+CLASS="para"
+>If you look at the source, you'll see that Open2 uses low-level
+primitives like <A
+CLASS="xref"
+HREF="ch03_107.htm"
+TITLE="pipe"
+><B
+CLASS="xref.cmd"
+>pipe</B
+></A
+> and <A
+CLASS="xref"
+HREF="ch03_033.htm"
+TITLE="exec"
+><B
+CLASS="xref.cmd"
+>exec</B
+></A
+> to create all the connections.
+While it might have been slightly more efficient to use <A
+CLASS="xref"
+HREF="ch03_152.htm"
+TITLE="socketpair"
+><B
+CLASS="xref.cmd"
+>socketpair</B
+></A
+>,
+it would have been even less portable.  As it is, the Open2
+and Open3 modules are unlikely to work anywhere except on a UNIX
+system, or some other system purporting to be POSIX compliant.</P
+><P
+CLASS="para"
+>Here's an example using <CODE
+CLASS="literal"
+>IPC::Open2::open2()</CODE
+>:</P
+><PRE
+CLASS="programlisting"
+>use FileHandle;
+use IPC::Open2;
+$pid = open2( \*Reader, \*Writer, &quot;cat -u -n&quot; );
+Writer-&gt;autoflush();     # This is default, actually.
+print Writer &quot;stuff\n&quot;;
+$got = &lt;Reader&gt;;</PRE
+><P
+CLASS="para"
+>The problem with this in general is that UNIX buffering is really going
+to ruin your day.  Even though your Writer filehandle is autoflushed,
+and the process on the other end will get your data in a timely manner,
+you can't usually do anything to force it to actually give it back to
+you in a similarly quick fashion.  In this particular case we can,
+since (on some systems) the <EM
+CLASS="emphasis"
+>cat</EM
+> program has a <B
+CLASS="emphasis.bold"
+>-u</B
+> option to make it do unbuffered
+output.  But very few UNIX commands are designed to operate well over pipes,
+so this seldom works unless you yourself wrote the program on the other
+end of the double-ended pipe.</P
+><P
+CLASS="para"
+>A partial solution to this is to use the <EM
+CLASS="emphasis"
+>Comm.pl</EM
+> library (not a standard
+module&nbsp;- see CPAN).  It uses pseudo-ttys to make your program behave
+more reasonably, at least on those machines that force standard output to do
+line-buffering:</P
+><PRE
+CLASS="programlisting"
+>require 'Comm.pl';
+$ph = open_proc('cat -n');
+for (1..10) {
+    print $ph &quot;a line\n&quot;;
+    print &quot;got back &quot;, scalar &lt;$ph&gt;;
+}</PRE
+><P
+CLASS="para"
+>This way you don't have to have control over the source code of the
+program you're using.</P
+></DIV
+><DIV
+CLASS="sect3"
+><H4
+CLASS="sect3"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-2.2.4"
+>6.2.2.4 Named pipes</A
+></H4
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17667"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17669"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17671"
+></A
+>A named pipe (often called a FIFO) is an old UNIX mechanism for
+setting up pipes between unrelated processes.  The names in question
+exist in the filesystem, which is just a funny way to say that you
+can put a special file in the filesystem that has another
+process behind it instead of a disk.</P
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17675"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17677"
+></A
+>To create a named pipe, use the UNIX command <EM
+CLASS="emphasis"
+>mknod</EM
+>(1) or, on some
+systems, <EM
+CLASS="emphasis"
+>mkfifo</EM
+>(1).  These commands may not be in your normal execution path.</P
+><PRE
+CLASS="programlisting"
+># system() return value is backwards, so &quot;and&quot; not &quot;or&quot;
+#
+$ENV{PATH} .= &quot;:/etc:/usr/etc&quot;;
+if  (      system('mknod',  $path, 'p') 
+       and system('mkfifo', $path) )
+{
+    die &quot;mk{nod,fifo} $path failed&quot;;
+}</PRE
+><P
+CLASS="para"
+>A FIFO is convenient when you want to connect a process to an unrelated
+one.  When you open a FIFO, the program will block until there's something
+on the other end.</P
+><P
+CLASS="para"
+>For example, let's say you'd like to have your <EM
+CLASS="emphasis"
+>.signature</EM
+> file be a
+named pipe that has a Perl program on the other end.  Now every time any
+program (like a mailer, newsreader, finger program, and so on) tries to read
+from that file, the reading program will block and your program will
+supply the new signature.  We'll use the pipe-checking file test, <CODE
+CLASS="literal"
+>-p</CODE
+>, to find out whether anyone (or anything) has accidentally removed our FIFO.</P
+><PRE
+CLASS="programlisting"
+>chdir; # go home
+$FIFO = '.signature';
+$ENV{PATH} .= &quot;:/etc:/usr/games&quot;;</PRE
+><PRE
+CLASS="programlisting"
+>while (1) {
+    unless (-p $FIFO) {
+        unlink $FIFO;
+        system('mknod', $FIFO, 'p') 
+            &amp;&amp; die &quot;can't mknod $FIFO: $!&quot;;
+    }</PRE
+><PRE
+CLASS="programlisting"
+>    # next line blocks until there's a reader
+    open (FIFO, &quot;&gt; $FIFO&quot;) or die &quot;can't write $FIFO: $!&quot;;
+    print FIFO &quot;John Smith (smith\@host.org)\n&quot;, `fortune -s`;
+    close FIFO;
+    sleep 1;    # to avoid dup sigs
+}</PRE
+><P
+CLASS="para"
+>If that last comment seems opaque to you, consider how often the
+<EM
+CLASS="emphasis"
+>fortune</EM
+> program changes its current fortune.</P
+><P
+CLASS="para"
+>Note that a FIFO in an NFS partition won't transfer data across your network.</P
+><A
+CLASS="indexterm"
+NAME="AUTOID-17692"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17693"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17694"
+></A
+></DIV
+></DIV
+><DIV
+CLASS="sect2"
+><H3
+CLASS="sect2"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-2.3"
+>6.2.3 System V IPC</A
+></H3
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17698"
+></A
+>Although System V IPC is pretty ancient, it still has some valid uses.
+But you can't use System V shared memory (or the more modern <EM
+CLASS="emphasis"
+>mmap</EM
+>(2)
+system call, for that matter) to share a variable among several
+processes.  That's because Perl would reallocate your string when you
+weren't wanting it to.  Instead, Perl uses a read/write notion.</P
+><P
+CLASS="para"
+>Here's a small example showing shared memory usage:</P
+><PRE
+CLASS="programlisting"
+>$IPC_PRIVATE = 0;
+$IPC_RMID = 0;
+$size = 2000;
+$key = shmget($IPC_PRIVATE, $size , 0777 );
+die unless defined $key;</PRE
+><PRE
+CLASS="programlisting"
+>$message = &quot;Message #1&quot;;
+shmwrite($key, $message, 0, 60 ) or die &quot;shmwrite: $!&quot;;
+shmread($key,$buff,0,60) or die &quot;shmread: $!&quot;;</PRE
+><PRE
+CLASS="programlisting"
+>print $buff,&quot;\n&quot;;</PRE
+><PRE
+CLASS="programlisting"
+>print &quot;deleting $key\n&quot;;
+shmctl($key ,$IPC_RMID, 0) or die &quot;shmctl: $!&quot;;</PRE
+><P
+CLASS="para"
+>Here's an example of a semaphore:</P
+><PRE
+CLASS="programlisting"
+>$IPC_KEY = 1234;
+$IPC_RMID = 0;
+$IPC_CREATE = 0001000;
+$key = semget($IPC_KEY, $nsems, 0666 | $IPC_CREATE );
+die if !defined($key);
+print &quot;$key\n&quot;;</PRE
+><P
+CLASS="para"
+>Put this code in a separate file so that more than one process can
+<A
+CLASS="xref"
+HREF="ch03_123.htm"
+TITLE="require"
+><B
+CLASS="xref.cmd"
+>require</B
+></A
+> and run it.
+Call the file <EM
+CLASS="emphasis"
+>take</EM
+>:</P
+><PRE
+CLASS="programlisting"
+># create a semaphore</PRE
+><PRE
+CLASS="programlisting"
+>$IPC_KEY = 1234;
+$key = semget($IPC_KEY, 0, 0 );
+die if !defined($key);</PRE
+><PRE
+CLASS="programlisting"
+>$semnum = 0;
+$semflag = 0;</PRE
+><PRE
+CLASS="programlisting"
+># 'take' semaphore
+# wait for semaphore to be zero
+$semop = 0;
+$opstring1 = pack(&quot;sss&quot;, $semnum, $semop, $semflag);</PRE
+><PRE
+CLASS="programlisting"
+># Increment the semaphore count
+$semop = 1;
+$opstring2 = pack(&quot;sss&quot;, $semnum, $semop,  $semflag);
+$opstring = $opstring1 . $opstring2;</PRE
+><PRE
+CLASS="programlisting"
+>semop($key,$opstring) or die &quot;semop: $!&quot;;</PRE
+><P
+CLASS="para"
+>Put this code in a separate file to be run in more than one process.
+Call this file <EM
+CLASS="emphasis"
+>give</EM
+>:</P
+><PRE
+CLASS="programlisting"
+># 'give' the semaphore
+# run this in the original process and you will see
+# that the second process continues</PRE
+><PRE
+CLASS="programlisting"
+>$IPC_KEY = 1234;
+$key = semget($IPC_KEY, 0, 0);
+die if !defined($key);</PRE
+><PRE
+CLASS="programlisting"
+>$semnum = 0;
+$semflag = 0;</PRE
+><PRE
+CLASS="programlisting"
+># Decrement the semaphore count
+$semop = -1;
+$opstring = pack(&quot;sss&quot;, $semnum, $semop, $semflag);</PRE
+><PRE
+CLASS="programlisting"
+>semop($key,$opstring) or die &quot;semop: $!&quot;;</PRE
+><P
+CLASS="para"
+>The code above is rather low-level and clunky.  A better approach would
+be to use the IPC::SysV module in CPAN.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H3
+CLASS="sect2"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-2.4"
+>6.2.4 Sockets</A
+></H3
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="CH06.SOCK1"
+></A
+>While sockets were invented under UNIX, nowadays you can find them on
+many other operating systems (though sometimes as an unbundled product).
+If you don't have sockets on your machine, you're going to have difficulty
+cooperating with processes on the Internet.  With sockets, you can do
+both virtual circuits (that is, TCP streams) and datagrams (that is, UDP
+packets).  You may be able to do even more, depending on your system.</P
+><P
+CLASS="para"
+>The Perl function calls for dealing with sockets have the same names as
+the corresponding system calls in C, but their arguments tend to differ
+for two reasons: first, Perl filehandles work differently from C file
+descriptors, and second, Perl already knows the length of its strings, so you
+don't need to pass that information.  See <A
+CLASS="xref"
+HREF="ch03_01.htm"
+TITLE="Functions"
+>Chapter 3</A
+> for details on each
+call.</P
+><P
+CLASS="para"
+>Most of these routines quietly but politely return the undefined value
+when they fail,
+instead of causing your program to die right then and there due to an
+uncaught exception.  (Actually, some of the new Socket module conversion
+functions call <CODE
+CLASS="literal"
+>croak()</CODE
+> on bad arguments.)  It is therefore essential
+that you check the return values of these functions.  Always begin
+your socket programs this way for optimal success (and don't forget to add
+<B
+CLASS="emphasis.bold"
+>-T</B
+> taint checking switch to the shebang line for servers):</P
+><PRE
+CLASS="programlisting"
+>#!/usr/bin/perl -w
+require 5.002;
+use strict;
+use sigtrap;
+use Socket;</PRE
+><P
+CLASS="para"
+>All the socket routines create system-specific portability problems.  As noted
+elsewhere, Perl is at the mercy of your C libraries for much of its system
+behavior.  It's probably safest to assume broken System V semantics for
+signals and to stick with simple TCP and UDP socket operations; for
+example, don't
+try to pass open file descriptors over a local UDP datagram socket if you
+want your code to stand a chance of being portable.  (Yes, you can really
+do that on some machines&nbsp;- see BSD in the Glossary.)</P
+><P
+CLASS="para"
+>One of the major problems with ancient socket code in Perl was that it tended
+to use hard-coded values for some of the constants, which severely hurt
+portability.  If you ever see code that does anything like explicitly
+setting <CODE
+CLASS="literal"
+>$AF_INET = 2</CODE
+>, you know you're in for big trouble.  An
+immeasurably superior approach is to use the Socket module, which more
+reliably grants access to the various constants and functions you'll need.</P
+><P
+CLASS="para"
+>Below we will present several sample clients and servers without a great
+deal of explanation, since it would mostly duplicate the descriptions
+we've already provided in <A
+CLASS="xref"
+HREF="ch03_01.htm"
+TITLE="Functions"
+>Chapter 3</A
+>.  Besides those descriptions, you
+should also check out CPAN.  Section 5 of the CPAN <EM
+CLASS="emphasis"
+>modules</EM
+>
+file is devoted
+to &quot;Networking, Device Control (modems), and Interprocess Communication&quot;,
+and refers you to numerous unbundled modules having to do with networking,
+Chat and Expect operations, CGI programming, DCE, FTP, IPC, NNTP, Proxy,
+Ptty, RPC, SNMP, SMTP, Telnet, Threads, and ToolTalk&nbsp;- just to name a
+few.</P
+><DIV
+CLASS="sect3"
+><H4
+CLASS="sect3"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-2.4.1"
+>6.2.4.1 Internet TCP clients and servers</A
+></H4
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17745"
+></A
+><A
+CLASS="indexterm"
+NAME="CH06.TCP1"
+></A
+><A
+CLASS="indexterm"
+NAME="CH06.TCP2"
+></A
+><A
+CLASS="indexterm"
+NAME="CH06.TCP3"
+></A
+>Use Internet-domain sockets when you want to do client-server
+communication between different machines.</P
+><P
+CLASS="para"
+>Here's a sample TCP client using Internet-domain sockets:</P
+><PRE
+CLASS="programlisting"
+>#!/usr/bin/perl -w
+require 5.002;
+use strict;
+use Socket;
+my ($remote, $port, $iaddr, $paddr, $proto, $line);</PRE
+><PRE
+CLASS="programlisting"
+>$remote  = shift || 'localhost';
+$port    = shift || 2345;  # random port
+if ($port =~ /\D/) { $port = getservbyname($port, 'tcp') }
+die &quot;No port&quot; unless $port;
+$iaddr   = inet_aton($remote)              or die &quot;no host: $remote&quot;;
+$paddr   = sockaddr_in($port, $iaddr);</PRE
+><PRE
+CLASS="programlisting"
+>$proto   = getprotobyname('tcp');
+socket(SOCK, PF_INET, SOCK_STREAM, $proto) or die &quot;socket: $!&quot;;
+connect(SOCK, $paddr)                      or die &quot;connect: $!&quot;;
+while ($line = &lt;SOCK&gt;) {
+    print $line;
+}</PRE
+><PRE
+CLASS="programlisting"
+>close (SOCK)                               or die &quot;close: $!&quot;;
+exit;</PRE
+><P
+CLASS="para"
+>And here's a corresponding server to go along with it.  The client
+didn't need to bind an address, but the server does.  However, we'll
+specify the address as <CODE
+CLASS="literal"
+>INADDR_ANY</CODE
+> so that the kernel can choose
+the appropriate interface on multi-homed hosts.  If you want to sit
+on a particular interface (like the external side of a gateway
+or firewall machine), you should fill this in with your real address
+instead.</P
+><PRE
+CLASS="programlisting"
+>#!/usr/bin/perl -Tw
+require 5.002;
+use strict;
+BEGIN { $ENV{PATH} = '/usr/ucb:/bin' }
+use Socket;
+use Carp;</PRE
+><PRE
+CLASS="programlisting"
+>sub logmsg { print &quot;$0 $$: @_ at &quot;, scalar localtime, &quot;\n&quot; }</PRE
+><PRE
+CLASS="programlisting"
+>my $port = shift || 2345;
+my $proto = getprotobyname('tcp');
+socket(Server, PF_INET, SOCK_STREAM, $proto) or die &quot;socket: $!&quot;;
+setsockopt(Server, SOL_SOCKET, SO_REUSEADDR, pack(&quot;l&quot;, 1))
+                                             or die &quot;setsockopt: $!&quot;;
+bind(Server, sockaddr_in($port, INADDR_ANY)) or die &quot;bind: $!&quot;;
+listen(Server,SOMAXCONN)                     or die &quot;listen: $!&quot;;</PRE
+><PRE
+CLASS="programlisting"
+>logmsg &quot;server started on port $port&quot;;</PRE
+><PRE
+CLASS="programlisting"
+>my $paddr;</PRE
+><PRE
+CLASS="programlisting"
+>$SIG{CHLD} = \&amp;REAPER;</PRE
+><PRE
+CLASS="programlisting"
+>for ( ; $paddr = accept(Client,Server); close Client) {
+    my($port,$iaddr) = sockaddr_in($paddr);
+    my $name = gethostbyaddr($iaddr,AF_INET);</PRE
+><PRE
+CLASS="programlisting"
+>    logmsg &quot;connection from $name [&quot;, 
+            inet_ntoa($iaddr), &quot;] at port $port&quot;;</PRE
+><PRE
+CLASS="programlisting"
+>    print CLIENT &quot;Hello there, $name, it's now &quot;, 
+                    scalar localtime, &quot;\n&quot;;
+}</PRE
+><P
+CLASS="para"
+>And here's a multi-threaded version.  It's multi-threaded in the sense
+that, like most typical servers, it spawns (forks) a slave server to
+handle the client request so that the master server can quickly go back
+to service the next client.</P
+><PRE
+CLASS="programlisting"
+>#!/usr/bin/perl -Tw
+require 5.002;
+use strict;
+BEGIN { $ENV{PATH} = '/usr/ucb:/bin' }
+use Socket;
+use Carp;
+use FileHandle;
+
+sub spawn;  # forward declaration
+sub logmsg { print &quot;$0 $$: @_ at &quot;, scalar localtime, &quot;\n&quot; } 
+
+my $port = shift || 2345;
+my $proto = getprotobyname('tcp');
+socket(Server, PF_INET, SOCK_STREAM, $proto) or die &quot;socket: $!&quot;;
+setsockopt(Server, SOL_SOCKET, SO_REUSEADDR, pack(&quot;l&quot;, 1))
+                                             or die &quot;setsockopt: $!&quot;;
+bind(Server, sockaddr_in($port, INADDR_ANY)) or die &quot;bind: $!&quot;;
+listen(Server,SOMAXCONN)                     or die &quot;listen: $!&quot;;
+
+logmsg &quot;server started on port $port&quot;;
+
+my $waitedpid = 0;
+my $paddr;
+
+sub REAPER { 
+    $waitedpid = wait;
+    $SIG{CHLD} = \&amp;REAPER;  # if you don't have sigaction(2)
+    logmsg &quot;reaped $waitedpid&quot; . ($? ? &quot; with exit $?&quot; : &quot;&quot;);
+}
+$SIG{CHLD} = \&amp;REAPER;
+
+for ( ; $paddr = accept(Client,Server); close Client) {
+    my($port,$iaddr) = sockaddr_in($paddr);
+    my $name = gethostbyaddr($iaddr,AF_INET);
+
+    logmsg &quot;connection from $name [&quot;, 
+            inet_ntoa($iaddr), &quot;] at port $port&quot;;
+
+    spawn sub { 
+        print &quot;Hello there, $name, it's now &quot;, scalar localtime, &quot;\n&quot;;
+        exec '/usr/games/fortune' 
+            or confess &quot;can't exec fortune: $!&quot;;
+    };
+
+} 
+
+sub spawn {
+    my $coderef = shift;
+
+    unless (@_ == 0 &amp;&amp; $coderef &amp;&amp; ref($coderef) eq 'CODE') { 
+        confess &quot;usage: spawn CODEREF&quot;;
+    }
+
+    my $pid;
+    if (!defined($pid = fork)) {
+        logmsg &quot;cannot fork: $!&quot;;
+        return;
+    } elsif ($pid) {
+        logmsg &quot;begat $pid&quot;;
+        return; # i'm the parent
+    }
+    # else i'm the child -- go spawn
+
+    open(STDIN,  &quot;&lt;&amp;Client&quot;)    or die &quot;can't dup client to stdin&quot;;
+    open(STDOUT, &quot;&gt;&amp;Client&quot;)    or die &quot;can't dup client to stdout&quot;;
+    STDOUT-&gt;autoflush();
+    exit &amp;$coderef();
+}</PRE
+><P
+CLASS="para"
+>As mentioned, this server takes the trouble to clone off a child version
+via <A
+CLASS="xref"
+HREF="ch03_040.htm"
+TITLE="fork"
+><B
+CLASS="xref.cmd"
+>fork</B
+></A
+> for each incoming request.  That way it can handle many
+requests at once, as long as you can create more processes.  (You might
+want to limit this.)  Even if you don't <A
+CLASS="xref"
+HREF="ch03_040.htm"
+TITLE="fork"
+><B
+CLASS="xref.cmd"
+>fork</B
+></A
+>, the <A
+CLASS="xref"
+HREF="ch03_086.htm"
+TITLE="listen"
+><B
+CLASS="xref.cmd"
+>listen</B
+></A
+> will
+allow up to <CODE
+CLASS="literal"
+>SOMAXCONN</CODE
+> (usually five or more) pending connections.
+Each connection uses up some resources, although not as much
+as a process. Forking servers also have to be particularly careful about
+cleaning up their dead children (called zombies in UNIX),
+because otherwise they'd quickly fill up your process table.  The <CODE
+CLASS="literal"
+>REAPER</CODE
+>
+code above will take care of that for you.</P
+><P
+CLASS="para"
+>If you're running on a system without restartable system calls (or
+if you want to be really careful in case you might someday run on
+such a system), you'll have to write a more elaborate <B
+CLASS="emphasis.bold"
+>for</B
+> loop.
+That's because the act of collecting the zombie child process may
+cause the <A
+CLASS="xref"
+HREF="ch03_004.htm"
+TITLE="accept"
+><B
+CLASS="xref.cmd"
+>accept</B
+></A
+> to fail and return the undefined value, making your
+loop fail prematurely.  Here's a work-around:</P
+><PRE
+CLASS="programlisting"
+>for ( $waitedpid = 0; 
+      ($paddr = accept(Client,Server)) || $waitedpid; 
+      $waitedpid = 0, close Client) 
+{
+    next if $waitedpid and not $paddr;   # or check $! == EINTR
+    # the rest is the same...</PRE
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17782"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17785"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17787"
+></A
+>We suggest that you use the <B
+CLASS="emphasis.bold"
+>-T</B
+> switch to enable taint checking (see &quot;Cooperating with Strangers&quot; and &quot;Cooperating with Other Languages&quot; later
+in this chapter)
+even if you aren't running setuid or setgid.  This is always a good idea
+for servers and other programs (like CGI scripts) that run on behalf of someone
+else, because it lessens the chances that people from the outside will
+be able to compromise your system.</P
+><P
+CLASS="para"
+>Let's look at another TCP client.  This one connects to the TCP &quot;time&quot;
+service on a number of different machines and shows how far their clocks
+differ from the system on which the client is being run:</P
+><PRE
+CLASS="programlisting"
+>#!/usr/bin/perl -w
+require 5.002;
+use strict;
+use Socket;</PRE
+><PRE
+CLASS="programlisting"
+>my $SECS_of_70_YEARS = 2208988800;
+sub ctime { scalar localtime(shift) }</PRE
+><PRE
+CLASS="programlisting"
+>my $iaddr = gethostbyname('localhost'); 
+my $proto = getprotobyname('tcp');   
+my $port = getservbyname('time', 'tcp');  
+my $paddr = sockaddr_in(0, $iaddr);
+my($host);</PRE
+><PRE
+CLASS="programlisting"
+>$| = 1;
+printf &quot;%-24s %8s %s\n&quot;,  &quot;localhost&quot;, 0, ctime(time());</PRE
+><PRE
+CLASS="programlisting"
+>foreach $host (@ARGV) {
+    printf &quot;%-24s &quot;, $host;
+    my $hisiaddr = inet_aton($host)     or die &quot;unknown host&quot;;
+    my $hispaddr = sockaddr_in($port, $hisiaddr);
+    socket(SOCKET, PF_INET, SOCK_STREAM, $proto)
+                                        or die &quot;socket: $!&quot;;
+    connect(SOCKET, $hispaddr)          or die &quot;bind: $!&quot;;
+    my $rtime = '    ';
+    read(SOCKET, $rtime, 4);
+    close(SOCKET);
+    my $histime = unpack(&quot;N&quot;, $rtime) - $SECS_of_70_YEARS ;
+    printf &quot;%8d %s\n&quot;, $histime - time, ctime($histime);
+}</PRE
+></DIV
+><DIV
+CLASS="sect3"
+><H4
+CLASS="sect3"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-2.4.2"
+>6.2.4.2 UNIX-domain clients and servers</A
+></H4
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17799"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17802"
+></A
+>That's all fine for Internet-domain clients and servers, but what about
+local communications?  While you can just pretend that your local
+machine is remote, sometimes you don't want to.  UNIX-domain sockets are
+local to the current host, and are often used internally to implement
+pipes.  They tend to be a little more efficient than Internet-domain
+sockets.  Unlike Internet-domain sockets, UNIX domain sockets can show
+up in the file system with an <EM
+CLASS="emphasis"
+>ls</EM
+>(1) listing.</P
+><PRE
+CLASS="programlisting"
+>$ ls -l /dev/log
+srw-rw-rw-  1 root            0 Oct 31 07:23 /dev/log</PRE
+><P
+CLASS="para"
+>You can test for these with Perl's <CODE
+CLASS="literal"
+>-S</CODE
+> file test:<A
+CLASS="indexterm"
+NAME="AUTOID-17809"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17812"
+></A
+></P
+><PRE
+CLASS="programlisting"
+>unless ( -S '/dev/log' ) {
+    die &quot;something's wicked with the print system&quot;;
+}</PRE
+><P
+CLASS="para"
+>Here's a sample UNIX-domain client:</P
+><PRE
+CLASS="programlisting"
+>#!/usr/bin/perl -w
+require 5.002;
+use Socket;
+use strict;
+my ($rendezvous, $line);
+
+$rendezvous = shift || '/tmp/catsock';
+socket(SOCK, PF_UNIX, SOCK_STREAM, 0)     or die &quot;socket: $!&quot;;
+connect(SOCK, sockaddr_un($rendezvous))   or die &quot;connect: $!&quot;;
+while ($line = &lt;SOCK&gt;) {
+    print $line;
+} 
+exit;</PRE
+><P
+CLASS="para"
+>And here's a corresponding server.</P
+><PRE
+CLASS="programlisting"
+>#!/usr/bin/perl -Tw
+require 5.002;
+use strict;
+use Socket;
+use Carp;
+
+BEGIN { $ENV{PATH} = '/usr/ucb:/bin' }
+
+my $NAME = '/tmp/catsock';
+my $uaddr = sockaddr_un($NAME);
+my $proto = getprotobyname('tcp');
+
+socket(Server,PF_UNIX,SOCK_STREAM,0)      or die &quot;socket: $!&quot;;
+unlink($NAME);
+bind  (Server, $uaddr)                    or die &quot;bind: $!&quot;;
+listen(Server,SOMAXCONN)                  or die &quot;listen: $!&quot;;
+
+logmsg &quot;server started on $NAME&quot;;
+
+$SIG{CHLD} = \&amp;REAPER;
+
+for ( ; $paddr = accept(Client,Server); close Client) {
+    logmsg &quot;connection on $NAME&quot;;
+    spawn sub { 
+        print &quot;Hello there, it's now &quot;, scalar localtime, &quot;\n&quot;;
+        exec '/usr/games/fortune';
+        die &quot;can't exec fortune: $!&quot;;
+    };
+}</PRE
+><P
+CLASS="para"
+>As you see, it's remarkably similar to the Internet-domain TCP server, so
+much so, in fact, that we've omitted several duplicate functions&nbsp;- <CODE
+CLASS="literal"
+>spawn()</CODE
+>,
+<CODE
+CLASS="literal"
+>logmsg()</CODE
+>, <CODE
+CLASS="literal"
+>ctime()</CODE
+>, and <CODE
+CLASS="literal"
+>REAPER()</CODE
+>&nbsp;- which are exactly the same as in the
+other server.</P
+><P
+CLASS="para"
+>So why would you ever want to use a UNIX domain socket instead of a FIFO?
+Because a FIFO doesn't give you sessions.  You
+can't tell one process's data from another's.  With socket programming,
+you get a separate session for each client&nbsp;- that's why <A
+CLASS="xref"
+HREF="ch03_004.htm"
+TITLE="accept"
+><B
+CLASS="xref.cmd"
+>accept</B
+></A
+> takes two
+arguments.</P
+><P
+CLASS="para"
+>For example, let's say that you have a long-running database server daemon
+that you want folks from the World Wide Web to be able to access, but only
+if they go through a CGI interface.  You'd have a small, simple CGI
+program that does whatever checks and logging you feel like, and then acts
+as a UNIX-domain client and proxies the request to your private server.</P
+><A
+CLASS="indexterm"
+NAME="AUTOID-17827"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17828"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17829"
+></A
+></DIV
+><DIV
+CLASS="sect3"
+><H4
+CLASS="sect3"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-2.4.3"
+>6.2.4.3 UDP: message passing</A
+></H4
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17833"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17836"
+></A
+>Another kind of client-server setup is one that uses not connections, but
+messages, or datagrams.  UDP communications involve much lower overhead but also provide
+less reliability, since there are no promises that messages will arrive at
+all, let alone in order and unmangled.  Still, UDP offers some advantages
+over TCP, including being able to broadcast or multicast to a whole
+bunch of destination hosts at once (usually on your local subnet).  If you
+find yourself overly concerned about reliability and start building checks
+into your message system, then you probably should just use TCP to start
+with.</P
+><P
+CLASS="para"
+>Here's a UDP program similar to the sample Internet TCP client given
+above.  However, instead of checking one host at a time, the UDP version
+will check many of them asynchronously by simulating a multicast and then
+using <B
+CLASS="emphasis.bold"
+>select</B
+> to do a timed-out wait for I/O.  To do something similar
+with TCP, you'd have to use a different socket handle for each host.</P
+><PRE
+CLASS="programlisting"
+>#!/usr/bin/perl -w
+use strict;
+require 5.002;
+use Socket;
+use Sys::Hostname;</PRE
+><PRE
+CLASS="programlisting"
+>my ( $count, $hisiaddr, $hispaddr, $histime, 
+     $host, $iaddr, $paddr, $port, $proto, 
+     $rin, $rout, $rtime, $SECS_of_70_YEARS);</PRE
+><PRE
+CLASS="programlisting"
+>$SECS_of_70_YEARS      = 2208988800;</PRE
+><PRE
+CLASS="programlisting"
+>$iaddr = gethostbyname(hostname());
+$proto = getprotobyname('udp');
+$port = getservbyname('time', 'udp');
+$paddr = sockaddr_in(0, $iaddr); # 0 means let kernel pick</PRE
+><PRE
+CLASS="programlisting"
+>socket(SOCKET, PF_INET, SOCK_DGRAM, $proto)   or die &quot;socket: $!&quot;;
+bind(SOCKET, $paddr)                          or die &quot;bind: $!&quot;;</PRE
+><PRE
+CLASS="programlisting"
+>$| = 1;
+printf &quot;%-12s %8s %s\n&quot;,  &quot;localhost&quot;, 0, scalar localtime time;
+$count = 0;
+for $host (@ARGV) {
+    $count++;
+    $hisiaddr = inet_aton($host)              or die &quot;unknown host&quot;;
+    $hispaddr = sockaddr_in($port, $hisiaddr);
+    defined(send(SOCKET, 0, 0, $hispaddr))    or die &quot;send $host: $!&quot;;
+}</PRE
+><PRE
+CLASS="programlisting"
+>$rin = &quot;&quot;;
+vec($rin, fileno(SOCKET), 1) = 1;</PRE
+><PRE
+CLASS="programlisting"
+># timeout after 10.0 seconds
+while ($count &amp;&amp; select($rout = $rin, undef, undef, 10.0)) {
+    $rtime = &quot;&quot;;
+    ($hispaddr = recv(SOCKET, $rtime, 4, 0))  or die &quot;recv: $!&quot;;
+    ($port, $hisiaddr) = sockaddr_in($hispaddr);
+    $host = gethostbyaddr($hisiaddr, AF_INET);
+    $histime = unpack(&quot;N&quot;, $rtime) - $SECS_of_70_YEARS ;
+    printf &quot;%-12s &quot;, $host;
+    printf &quot;%8d %s\n&quot;, $histime - time, scalar localtime($histime);
+    $count--;
+}</PRE
+><A
+CLASS="indexterm"
+NAME="AUTOID-17848"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17849"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17850"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17851"
+></A
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="htmlnav"
+><P
+></P
+><HR
+ALIGN="LEFT"
+WIDTH="515"
+TITLE="footer"><TABLE
+WIDTH="515"
+BORDER="0"
+CELLSPACING="0"
+CELLPADDING="0"
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+WIDTH="172"
+><A
+CLASS="SECT1"
+HREF="ch06_01.htm"
+TITLE="6.1 Cooperating with Command Interpreters"
+><IMG
+SRC="../gifs/txtpreva.gif"
+ALT="Previous: 6.1 Cooperating with Command Interpreters"
+BORDER="0"></A
+></TD
+><TD
+ALIGN="CENTER"
+VALIGN="TOP"
+WIDTH="171"
+><A
+CLASS="book"
+HREF="index.htm"
+TITLE="Programming Perl"
+><IMG
+SRC="../gifs/txthome.gif"
+ALT="Programming Perl"
+BORDER="0"></A
+></TD
+><TD
+ALIGN="RIGHT"
+VALIGN="TOP"
+WIDTH="172"
+><A
+CLASS="SECT1"
+HREF="ch06_03.htm"
+TITLE="6.3 Cooperating with Strangers"
+><IMG
+SRC="../gifs/txtnexta.gif"
+ALT="Next: 6.3 Cooperating with Strangers"
+BORDER="0"></A
+></TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+WIDTH="172"
+>6.1 Cooperating with Command Interpreters</TD
+><TD
+ALIGN="CENTER"
+VALIGN="TOP"
+WIDTH="171"
+><A
+CLASS="index"
+HREF="index/idx_0.htm"
+TITLE="Book Index"
+><IMG
+SRC="../gifs/index.gif"
+ALT="Book Index"
+BORDER="0"></A
+></TD
+><TD
+ALIGN="RIGHT"
+VALIGN="TOP"
+WIDTH="172"
+>6.3 Cooperating with Strangers</TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="515"
+TITLE="footer"><P
+CLASS="nav"
+><FONT
+SIZE="-1"
+>[ <A
+HREF="../index.htm"
+TITLE="The Perl CD Bookshelf"
+>Library Home</A
+> | <A
+HREF="../perlnut/index.htm"
+TITLE="Perl in a Nutshell"
+>Perl in a Nutshell</A
+> | <A
+HREF="../learn/index.htm"
+TITLE="Learning Perl"
+>Learning Perl</A
+> | <A
+HREF="../learn32/index.htm"
+TITLE="Learning Perl on Win32 Systems"
+>Learning Perl on Win32</A
+> | <A
+HREF="index.htm"
+TITLE="Programming Perl"
+>Programming Perl</A
+> | <A
+HREF="../advprog/index.htm"
+TITLE="Advanced Perl Programming"
+>Advanced Perl Programming</A
+> | <A
+HREF="../cookbook/index.htm"
+TITLE="Perl Cookbook"
+>Perl Cookbook</A
+> ]</FONT
+></P
+></DIV
+></BODY
+></HTML
+>

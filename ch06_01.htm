@@ -1,0 +1,2726 @@
+<HTML
+><HEAD
+>
+<TITLE>[Chapter 6] Social Engineering</TITLE>
+<META
+NAME="DC.title"
+CONTENT="Programming Perl"><META
+NAME="DC.creator"
+CONTENT="Larry Wall, Tom Christiansen &amp; Randal L. Schwartz"><META
+NAME="DC.publisher"
+CONTENT="O'Reilly &amp; Associates, Inc."><META
+NAME="DC.date"
+CONTENT="1999-07-02T01:59:20Z"><META
+NAME="DC.type"
+CONTENT="Text.Monograph"><META
+NAME="DC.format"
+CONTENT="text/html"
+SCHEME="MIME"><META
+NAME="DC.source"
+CONTENT="1-56592-149-6"
+SCHEME="ISBN"><META
+NAME="DC.language"
+CONTENT="en-US"><META
+NAME="generator"
+CONTENT="Jade 1.1/O'Reilly DocBook 3.0 to HTML 4.0"><LINK
+REV="made"
+HREF="mailto:online-books@oreilly.com"
+TITLE="Online Books Comments"><LINK
+REL="up"
+HREF="index.htm"
+TITLE="Programming Perl"><LINK
+REL="prev"
+HREF="ch05_05.htm"
+TITLE="5.5 Some Hints About Object Design"><LINK
+REL="next"
+HREF="ch06_02.htm"
+TITLE="6.2 Cooperating with Other Processes"></HEAD
+><BODY
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+><DIV
+CLASS="htmlnav"
+><H1
+><IMG
+SRC="gifs/smbanner.gif"
+ALT="Programming Perl"
+USEMAP="#srchmap"
+BORDER="0"></H1
+><MAP
+NAME="srchmap"
+><AREA
+SHAPE="RECT"
+COORDS="0,0,466,65"
+HREF="index.htm"
+ALT="Programming Perl"><AREA
+SHAPE="RECT"
+COORDS="467,0,514,18"
+HREF="../search/psrch.htm"
+ALT="Search this book"></MAP
+><TABLE
+WIDTH="515"
+BORDER="0"
+CELLSPACING="0"
+CELLPADDING="0"
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+WIDTH="172"
+><A
+CLASS="SECT1"
+HREF="ch05_05.htm"
+TITLE="5.5 Some Hints About Object Design"
+><IMG
+SRC="../gifs/txtpreva.gif"
+ALT="Previous: 5.5 Some Hints About Object Design"
+BORDER="0"></A
+></TD
+><TD
+ALIGN="CENTER"
+VALIGN="TOP"
+WIDTH="171"
+><B
+><FONT
+FACE="ARIEL,HELVETICA,HELV,SANSERIF"
+SIZE="-1"
+>Chapter 6</FONT
+></B
+></TD
+><TD
+ALIGN="RIGHT"
+VALIGN="TOP"
+WIDTH="172"
+><A
+CLASS="SECT1"
+HREF="ch06_02.htm"
+TITLE="6.2 Cooperating with Other Processes"
+><IMG
+SRC="../gifs/txtnexta.gif"
+ALT="Next: 6.2 Cooperating with Other Processes"
+BORDER="0"></A
+></TD
+></TR
+></TABLE
+>&nbsp;<HR
+ALIGN="LEFT"
+WIDTH="515"
+TITLE="footer"></DIV
+><DIV
+CLASS="CHAPTER"
+><H1
+CLASS="chapter"
+><A
+CLASS="title"
+NAME="PERL2-CH-6"
+>6. Social Engineering</A
+></H1
+><DIV
+CLASS="htmltoc"
+><P
+><B
+>Contents:</B
+><BR><A
+CLASS="SECT1"
+HREF="#PERL2-CH-6-SECT-1"
+TITLE="6.1 Cooperating with Command Interpreters"
+>Cooperating with Command Interpreters</A
+><BR><A
+CLASS="SECT1"
+HREF="ch06_02.htm"
+TITLE="6.2 Cooperating with Other Processes"
+>Cooperating with Other Processes</A
+><BR><A
+CLASS="SECT1"
+HREF="ch06_03.htm"
+TITLE="6.3 Cooperating with Strangers"
+>Cooperating with Strangers</A
+><BR><A
+CLASS="SECT1"
+HREF="ch06_04.htm"
+TITLE="6.4 Cooperating with Other Languages"
+>Cooperating with Other Languages</A
+></P
+><P
+></P
+></DIV
+><P
+CLASS="para"
+>Languages have different personalities.  You can classify computer
+languages by how introverted or extroverted they are; for instance, Icon
+and Lisp are stay-at-home languages, while Tcl and the various shells
+are party animals.  Self-sufficient languages prefer to compete with other
+languages, while social languages prefer to cooperate with other
+languages.  As usual, Perl tries to do both.</P
+><P
+CLASS="para"
+>So this chapter is about relationships.  Until now we've looked inward
+at the competitive nature of Perl, but now we need to look outward
+and see the cooperative nature of Perl.  If we really mean what we
+say about Perl being a glue language, then we can't just talk about
+glue; we have to talk about the various kinds of things you can glue
+together.  A glob of glue by itself isn't very interesting.</P
+><P
+CLASS="para"
+>Perl doesn't just glue together other computer languages.  It also glues
+together command line interpreters, operating systems, processes,
+machines, devices, networks, databases, institutions, cultures, Web
+pages, GUIs, peers, servers, and clients, not to mention people like
+system administrators, users, and of course, hackers, both naughty and
+nice.  In fact, Perl is rather competitive about being cooperative.</P
+><P
+CLASS="para"
+>So this chapter is about Perl's relationship with everything in the world.
+Obviously, we can't talk about everything in the world, but we'll try.</P
+><DIV
+CLASS="sect1"
+><H2
+CLASS="sect1"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-1"
+>6.1 Cooperating with Command Interpreters</A
+></H2
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="CH06.INT1"
+></A
+><A
+CLASS="indexterm"
+NAME="CH06.INT2"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-16615"
+></A
+>It is fortunate that Perl grew up in the UNIX world&nbsp;- that means
+its invocation syntax works pretty well under the command interpreters
+of other operating systems too.  Most command interpreters know how to
+deal with a list of words as arguments, and don't care if an argument
+starts with a minus sign.  There are, of course, some sticky spots where
+you'll get fouled up if you move from one system to another.  You can't
+use single quotes under MS-DOS as you do under UNIX, for instance.  And
+on systems like VMS, some wrapper code has to jump through hoops to
+emulate UNIX I/O redirection.  Once you get past those issues, however,
+Perl treats its switches and arguments much the same on any
+operating system.</P
+><P
+CLASS="para"
+>Even when you don't have a command interpreter, <EM
+CLASS="emphasis"
+>per se</EM
+>, it's easy to execute a Perl script from another program, such as the <EM
+CLASS="emphasis"
+>inet</EM
+>
+daemon or a CGI server.  Not only can such a server pass arguments in
+the ordinary way, but it can also pass in information via environment
+variables and (under UNIX at least) inherited file descriptors.  Even
+more exotic argument-passing mechanisms may be encapsulated in a module
+that can be brought into the Perl script via a simple <A
+CLASS="xref"
+HREF="ch03_185.htm"
+TITLE="use"
+><B
+CLASS="xref.cmd"
+>use</B
+></A
+> directive.</P
+><DIV
+CLASS="sect2"
+><H3
+CLASS="sect2"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-1.1"
+>6.1.1 Command Processing</A
+></H3
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="CH06.PROC1"
+></A
+><A
+CLASS="indexterm"
+NAME="CH06.PROC2"
+></A
+><A
+CLASS="indexterm"
+NAME="CH06.PROC3"
+></A
+>Perl parses command-line switches in the standard fashion.[<A
+CLASS="footnote"
+HREF="#AUTOID-16632"
+>1</A
+>]
+That is, it expects any switches (words beginning with a minus) to
+come first on the command line.  After that comes the name of the script
+(usually), followed by any additional arguments (often filenames) to be
+passed into the script.  Some of these additional arguments may be
+switches, but if so, they must be processed by the script, since Perl
+gives up parsing switches as soon as it sees a non-switch, or the
+special &quot;<B
+CLASS="emphasis.bold"
+>--</B
+>&quot; switch that terminates switch processing.</P
+><BLOCKQUOTE
+CLASS="footnote"
+><DIV
+CLASS="footnote"
+><P
+CLASS="para"
+><A
+CLASS="footnote"
+NAME="AUTOID-16632"
+>[1]</A
+> Presuming you agree that UNIX is both standard and fashionable.</P
+></DIV
+></BLOCKQUOTE
+><P
+CLASS="para"
+>Perl gives you some flexibility in how you supply your program.  For
+small, quick-and-dirty jobs, you can program Perl entirely from the
+command line.  For larger, more permanent jobs, you can supply a Perl
+script as a separate file.  Perl looks for the script to be specified in
+one of three ways:</P
+><OL
+CLASS="orderedlist"
+><LI
+CLASS="listitem"
+><P
+CLASS="para"
+>Specified line by line via <B
+CLASS="emphasis.bold"
+>-e</B
+> switches on the command line.</P
+></LI
+><LI
+CLASS="listitem"
+><P
+CLASS="para"
+>Contained in the file specified by the first filename on the command line.
+(Note that systems supporting the <CODE
+CLASS="literal"
+>#!</CODE
+> shebang notation invoke
+interpreters this way on your behalf.)</P
+></LI
+><LI
+CLASS="listitem"
+><P
+CLASS="para"
+>Passed in implicitly via standard input.  This only works if there are
+no filename arguments; to pass arguments to a standard-input script you
+must explicitly specify a &quot;<B
+CLASS="emphasis.bold"
+>-</B
+>&quot; for the script name.  For example,
+under UNIX:</P
+><PRE
+CLASS="programlisting"
+>echo &quot;print 'Hello, world'&quot; | perl -</PRE
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-16648"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-16651"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-16653"
+></A
+>With methods 2 and 3, Perl starts parsing the input file from the
+beginning, unless you've specified a <B
+CLASS="emphasis.bold"
+>-x</B
+> switch, in which case it
+scans for the first line starting with <CODE
+CLASS="literal"
+>#!</CODE
+> and containing the word
+&quot;<CODE
+CLASS="literal"
+>perl</CODE
+>&quot;, and starts there instead.  This is useful for running a script
+embedded in a larger message.  (In this case you might indicate the end
+of the script using the <CODE
+CLASS="literal"
+>__END__</CODE
+> token.)</P
+></LI
+></OL
+><P
+CLASS="para"
+>Whether or not you use <B
+CLASS="emphasis.bold"
+>-x</B
+>, the <CODE
+CLASS="literal"
+>#!</CODE
+> line is always examined for
+switches as the line is being parsed.  Thus, if you're on a machine that
+only allows one argument with the <CODE
+CLASS="literal"
+>#!</CODE
+> line, or worse, doesn't even
+recognize the <CODE
+CLASS="literal"
+>#!</CODE
+> line as special, you still can get consistent switch
+behavior regardless of how Perl was invoked, even if <B
+CLASS="emphasis.bold"
+>-x</B
+> was used to
+find the beginning of the script.</P
+><BLOCKQUOTE
+CLASS="warning"
+><P
+CLASS="para"
+><STRONG
+>WARNING:</STRONG
+> Because many versions of UNIX silently chop off kernel interpretation of
+the <CODE
+CLASS="literal"
+>#!</CODE
+> line after 32 characters, some switches may be passed in on the
+command line, and some may not; you could even get a &quot;<CODE
+CLASS="literal"
+>-</CODE
+>&quot; without its
+letter, if you're not careful.  You probably want to make sure that all
+your switches fall either before or after that 32-character boundary.
+Most switches don't actually care if they're processed redundantly, but
+getting a &quot;<CODE
+CLASS="literal"
+>-</CODE
+>&quot; instead of a complete switch could cause Perl to try to
+execute standard input instead of your script.  And a partial <B
+CLASS="emphasis.bold"
+>-I</B
+> switch
+could also cause odd results.  Of course, if you're not on a UNIX system,
+you're guaranteed not to have this problem.</P
+></BLOCKQUOTE
+><P
+CLASS="para"
+>Parsing of the switches on the <CODE
+CLASS="literal"
+>#!</CODE
+> line starts wherever &quot;<CODE
+CLASS="literal"
+>perl</CODE
+>&quot; is
+mentioned in the line.  The sequences &quot;<CODE
+CLASS="literal"
+>-*</CODE
+>&quot; and &quot;<CODE
+CLASS="literal"
+>- </CODE
+>&quot; are specifically
+ignored for the benefit of <EM
+CLASS="emphasis"
+>emacs</EM
+> users, so that, if you're
+so inclined, you can say:</P
+><PRE
+CLASS="programlisting"
+>#!/bin/sh -- # -*- perl -*- -p
+eval 'exec perl -S $0 ${1+&quot;$@&quot;}'
+    if 0;</PRE
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-16680"
+></A
+>and Perl will see only the <B
+CLASS="emphasis.bold"
+>-p</B
+> switch.  The fancy &quot;<CODE
+CLASS="literal"
+>-*- perl
+-*-</CODE
+>&quot; gizmo tells <EM
+CLASS="emphasis"
+>emacs</EM
+> to start up in Perl mode; you don't
+need it if you don't use <EM
+CLASS="emphasis"
+>emacs</EM
+>.  The <B
+CLASS="emphasis.bold"
+>-S</B
+> mess is explained below.</P
+><P
+CLASS="para"
+>If the <CODE
+CLASS="literal"
+>#!</CODE
+> line does <EM
+CLASS="emphasis"
+>not</EM
+> contain the word &quot;<CODE
+CLASS="literal"
+>perl</CODE
+>&quot;, the program
+named after the <CODE
+CLASS="literal"
+>#!</CODE
+> is executed instead of the Perl interpreter.
+For example, suppose you have an ordinary Bourne shell script out there
+that says:</P
+><PRE
+CLASS="programlisting"
+>#!/bin/sh
+echo &quot;I am a shell script&quot;</PRE
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-16695"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-16697"
+></A
+>If you feed that file to Perl, then Perl will run <EM
+CLASS="emphasis"
+>/bin/sh</EM
+> for you.
+This is slightly bizarre, but it helps people on machines that don't
+recognize <CODE
+CLASS="literal"
+>#!</CODE
+>, because&nbsp;- by setting their
+<CODE
+CLASS="literal"
+>SHELL</CODE
+> environmental variable&nbsp;- they can tell a program (such as a mailer)
+that their shell is <EM
+CLASS="emphasis"
+>/usr/bin/perl</EM
+>, and Perl will then dispatch the
+program to the correct interpreter for them, even though their kernel is
+too stupid to do so.  Classify it as a strange form of cooperation.</P
+><P
+CLASS="para"
+>But back to Perl scripts that are really Perl scripts.
+After locating your script, Perl compiles the entire script to an
+internal form.  If any compilation errors arise, execution of the
+script is not attempted (unlike the typical shell script,
+which might run partway through before finding a syntax error).
+If the script is syntactically correct, it is executed.  If the script
+runs off the end without hitting an <A
+CLASS="xref"
+HREF="ch03_035.htm"
+TITLE="exit"
+><B
+CLASS="xref.cmd"
+>exit</B
+></A
+> or <A
+CLASS="xref"
+HREF="ch03_027.htm"
+TITLE="die"
+><B
+CLASS="xref.cmd"
+>die</B
+></A
+> operator, an implicit
+<CODE
+CLASS="literal"
+>exit(0)</CODE
+> is provided to indicate successful completion.</P
+><A
+CLASS="indexterm"
+NAME="AUTOID-16708"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-16709"
+></A
+></DIV
+><DIV
+CLASS="sect2"
+><H3
+CLASS="sect2"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-1.2"
+>6.1.2 Switches</A
+></H3
+><P
+CLASS="para"
+>A single-character switch with no argument may be combined (bundled)
+with the following switch, if any.<A
+CLASS="indexterm"
+NAME="AUTOID-16713"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-16716"
+></A
+><A
+CLASS="indexterm"
+NAME="CH06.PROC4"
+></A
+></P
+><PRE
+CLASS="programlisting"
+>#!/usr/bin/perl -spi.bak    # same as -s -p -i.bak</PRE
+><P
+CLASS="para"
+>Switches are also known as options, or flags.
+Perl recognizes these switches:</P
+><DL
+CLASS="variablelist"
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>--</B
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+>Terminates switch processing, even if the next argument starts with a
+minus.  It has no other effect.<A
+CLASS="indexterm"
+NAME="AUTOID-16729"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-16732"
+></A
+></P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-0</B
+>[<EM
+CLASS="emphasis"
+>octnum</EM
+>]</DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-16741"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-16744"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-16746"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-16749"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-16752"
+></A
+>Specifies the record separator (<CODE
+CLASS="literal"
+>$/</CODE
+>) as an octal number.  If <EM
+CLASS="emphasis"
+>octnum</EM
+>
+is not present, the null character is the separator.  Other switches may
+precede or follow the octal number.  For example, if you have a version of
+<EM
+CLASS="emphasis"
+>find</EM
+>(1) that can print filenames terminated by the null character, you
+can say this:</P
+><PRE
+CLASS="programlisting"
+>find . -name '*.bak' -print0 | perl -n0e unlink</PRE
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-16760"
+></A
+>The special value <CODE
+CLASS="literal"
+>00</CODE
+> will cause Perl to slurp files in paragraph mode,
+equivalent to setting the <B
+CLASS="emphasis.bold"
+>$/</B
+> variable to <CODE
+CLASS="literal"
+>&quot;&quot;</CODE
+>.
+The value <CODE
+CLASS="literal"
+>0777</CODE
+> will cause Perl to slurp files whole since there is no
+legal ASCII character with that value.  This is equivalent to undefining
+the <B
+CLASS="emphasis.bold"
+>$/</B
+> variable.</P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-a  </B
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-16772"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-16775"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-16777"
+></A
+>Turns on autosplit mode when used with a <B
+CLASS="emphasis.bold"
+>-n</B
+> 
+or <B
+CLASS="emphasis.bold"
+>-p</B
+>.  An implicit
+<B
+CLASS="emphasis.bold"
+>split</B
+> command to the <B
+CLASS="emphasis.bold"
+>@F</B
+> array is done as the first thing inside the
+implicit <B
+CLASS="emphasis.bold"
+>while</B
+> loop produced by the 
+<B
+CLASS="emphasis.bold"
+>-n</B
+> or <B
+CLASS="emphasis.bold"
+>-p</B
+>.  So:</P
+><PRE
+CLASS="programlisting"
+>perl -ane 'print pop(@F), &quot;\n&quot;;'</PRE
+><P
+CLASS="para"
+>is equivalent to:</P
+><PRE
+CLASS="programlisting"
+>while (&lt;&gt;) {
+    @F = split(' ');
+    print pop(@F), &quot;\n&quot;;
+}</PRE
+><P
+CLASS="para"
+>A different field delimiter may be specified using <B
+CLASS="emphasis.bold"
+>-F</B
+>.</P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-c  </B
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-16796"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-16799"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-16801"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-16804"
+></A
+>Causes Perl to check the syntax of the script and then exit without
+executing it.  Actually, it will execute any <CODE
+CLASS="literal"
+>BEGIN</CODE
+> blocks and
+<A
+CLASS="xref"
+HREF="ch03_185.htm"
+TITLE="use"
+><B
+CLASS="xref.cmd"
+>use</B
+></A
+> directives, since these are considered to occur before the
+execution of your program.  It also executes any <CODE
+CLASS="literal"
+>END</CODE
+> blocks, in case
+they need to clean up something that happened in a corresponding
+<CODE
+CLASS="literal"
+>BEGIN</CODE
+> block.  The switch is more or less equivalent to having an
+<CODE
+CLASS="literal"
+>exit(0)</CODE
+> as the first statement in your program.</P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-d  </B
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-16816"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-16819"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-16821"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-16823"
+></A
+>Runs the script under the Perl debugger.  See &quot;The Perl Debugger&quot; in
+<A
+CLASS="xref"
+HREF="ch08_01.htm"
+TITLE="Other Oddments"
+>Chapter 8, <CITE
+CLASS="chapter"
+>Other Oddments</CITE
+></A
+>.</P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-d:</B
+><EM
+CLASS="emphasis"
+>foo</EM
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+>Runs the script under the control of a debugging or tracing module
+installed in the Perl library as Devel::<EM
+CLASS="emphasis"
+>foo</EM
+>.  For example,
+<CODE
+CLASS="literal"
+>-d:DProf</CODE
+> executes the script using the
+Devel::DProf profiler.  See also the debugging section in <A
+CLASS="xref"
+HREF="ch08_01.htm"
+TITLE="Other Oddments"
+>Chapter 8</A
+>.</P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-D</B
+><EM
+CLASS="emphasis"
+>number</EM
+></DT
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-D</B
+><EM
+CLASS="emphasis"
+>list</EM
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-16846"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-16849"
+></A
+>Sets debugging flags.  (This only works if debugging is compiled into
+your version of Perl via the -DDEBUGGING C compiler switch.)  You may 
+specify either a number that is the sum of the bits
+you want, or a list of letters.  To watch how it executes your script,
+for instance, use <CODE
+CLASS="literal"
+>-D14</CODE
+> or <CODE
+CLASS="literal"
+>-Dslt</CODE
+>.  Another nice value is <CODE
+CLASS="literal"
+>-D1024</CODE
+>
+or <CODE
+CLASS="literal"
+>-Dx</CODE
+>, which lists your compiled syntax tree.  And <CODE
+CLASS="literal"
+>-D512</CODE
+> or
+<CODE
+CLASS="literal"
+>-Dr</CODE
+> displays compiled regular expressions.  The numeric value is
+available internally as the special variable <B
+CLASS="emphasis.bold"
+>$^D</B
+>.  Here are the
+assigned bit values:<A
+CLASS="indexterm"
+NAME="AUTOID-16858"
+></A
+></P
+><TABLE
+CLASS="informaltable"
+BORDER="1"
+CELLPADDING="3"
+><THEAD
+CLASS="thead"
+><TR
+CLASS="row"
+VALIGN="TOP"
+><TH
+CLASS="entry"
+ALIGN="LEFT"
+ROWSPAN="1"
+COLSPAN="1"
+>Bit</TH
+><TH
+CLASS="entry"
+ALIGN="LEFT"
+ROWSPAN="1"
+COLSPAN="1"
+>Letter</TH
+><TH
+CLASS="entry"
+ALIGN="LEFT"
+ROWSPAN="1"
+COLSPAN="1"
+>Meaning</TH
+></TR
+></THEAD
+><TBODY
+CLASS="tbody"
+><TR
+CLASS="row"
+VALIGN="TOP"
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>1</TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+><CODE
+CLASS="literal"
+>p</CODE
+></TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>Tokenizing and parsing</TD
+></TR
+><TR
+CLASS="row"
+VALIGN="TOP"
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>2</TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+><CODE
+CLASS="literal"
+>s</CODE
+></TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>Stack snapshots</TD
+></TR
+><TR
+CLASS="row"
+VALIGN="TOP"
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>4</TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+><CODE
+CLASS="literal"
+>l</CODE
+></TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>Label stack processing</TD
+></TR
+><TR
+CLASS="row"
+VALIGN="TOP"
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>8</TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+><CODE
+CLASS="literal"
+>t</CODE
+></TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>Trace execution</TD
+></TR
+><TR
+CLASS="row"
+VALIGN="TOP"
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>16</TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+><CODE
+CLASS="literal"
+>o</CODE
+></TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>Object method Lookup</TD
+></TR
+><TR
+CLASS="row"
+VALIGN="TOP"
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>32</TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+><CODE
+CLASS="literal"
+>c</CODE
+></TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>String/numeric conversions</TD
+></TR
+><TR
+CLASS="row"
+VALIGN="TOP"
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>64</TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+><CODE
+CLASS="literal"
+>P</CODE
+></TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>Print preprocessor command for -P</TD
+></TR
+><TR
+CLASS="row"
+VALIGN="TOP"
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>128</TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+><CODE
+CLASS="literal"
+>m</CODE
+></TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>Memory allocation</TD
+></TR
+><TR
+CLASS="row"
+VALIGN="TOP"
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>256</TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+><CODE
+CLASS="literal"
+>f</CODE
+></TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>Format processing</TD
+></TR
+><TR
+CLASS="row"
+VALIGN="TOP"
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>512</TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+><CODE
+CLASS="literal"
+>r</CODE
+></TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>Regular expression processing</TD
+></TR
+><TR
+CLASS="row"
+VALIGN="TOP"
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>1,024</TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+><CODE
+CLASS="literal"
+>x</CODE
+></TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>Syntax tree dump</TD
+></TR
+><TR
+CLASS="row"
+VALIGN="TOP"
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>2,048</TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+><CODE
+CLASS="literal"
+>u</CODE
+></TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>Tainting checks</TD
+></TR
+><TR
+CLASS="row"
+VALIGN="TOP"
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>4,096</TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+><CODE
+CLASS="literal"
+>L</CODE
+></TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>Memory leaks (not supported any more)</TD
+></TR
+><TR
+CLASS="row"
+VALIGN="TOP"
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>8,192</TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+><CODE
+CLASS="literal"
+>H</CODE
+></TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>Hash dump -- usurps values()</TD
+></TR
+><TR
+CLASS="row"
+VALIGN="TOP"
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>16,384</TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+><CODE
+CLASS="literal"
+>X</CODE
+></TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>Scratchpad allocation</TD
+></TR
+><TR
+CLASS="row"
+VALIGN="TOP"
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>32,768</TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+><CODE
+CLASS="literal"
+>D</CODE
+></TD
+><TD
+CLASS="entry"
+ROWSPAN="1"
+COLSPAN="1"
+>Cleaning up</TD
+></TR
+></TBODY
+></TABLE
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-e</B
+> <EM
+CLASS="emphasis"
+>commandline</EM
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-16956"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-16959"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-16961"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-16964"
+></A
+>May be used to enter one or more lines of script.  If <B
+CLASS="emphasis.bold"
+>-e</B
+> is
+used, Perl will not look for a script filename in the argument list.
+The <B
+CLASS="emphasis.bold"
+>-e</B
+> argument is treated as if it ends with a newline, so multiple
+<B
+CLASS="emphasis.bold"
+>-e</B
+> commands may be given to build up a multi-line script.  (Make
+sure to use semicolons where you would in a normal program.) Just
+because <B
+CLASS="emphasis.bold"
+>-e</B
+> supplies a newline on each argument doesn't mean you have
+to use multiple <B
+CLASS="emphasis.bold"
+>-e</B
+> switches&nbsp;- if your shell supports multi-line
+quoting, you may pass a multi-line script as one <B
+CLASS="emphasis.bold"
+>-e</B
+> argument, just as
+<EM
+CLASS="emphasis"
+>awk</EM
+>(1) scripts are typically passed.</P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-F</B
+><EM
+CLASS="emphasis"
+>pattern</EM
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-16981"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-16984"
+></A
+>Specifies the pattern to split on if <B
+CLASS="emphasis.bold"
+>-a</B
+> is also in effect.  The
+pattern may be surrounded by <CODE
+CLASS="literal"
+>//</CODE
+>,
+<CODE
+CLASS="literal"
+>&quot;&quot;</CODE
+>
+or <CODE
+CLASS="literal"
+>''</CODE
+>, otherwise it will be
+put in single quotes.  (Remember that to pass quotes through a shell,
+you have to quote the quotes.)</P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-h  </B
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+>Prints a summary of Perl's command-line options.<A
+CLASS="indexterm"
+NAME="AUTOID-16995"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-16998"
+></A
+></P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-i</B
+>[<EM
+CLASS="emphasis"
+>extension</EM
+>]</DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17006"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17009"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17011"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17015"
+></A
+>Specifies that files processed by the <CODE
+CLASS="literal"
+>&lt;&gt;</CODE
+> construct are to be edited
+in-place.  It does this by renaming the input file, opening the output
+file by the original name, and selecting that output file as the default
+for <A
+CLASS="xref"
+HREF="ch03_110.htm"
+TITLE="print"
+><B
+CLASS="xref.cmd"
+>print</B
+></A
+> statements.  The extension, if supplied, is added to the name
+of the old file to make a backup copy.  If no extension is supplied, no
+backup is made.  From the shell, saying:</P
+><PRE
+CLASS="programlisting"
+>$ perl -p -i.bak -e &quot;s/foo/bar/; ... &quot;</PRE
+><P
+CLASS="para"
+>is the same as using the script:</P
+><PRE
+CLASS="programlisting"
+>#!/usr/bin/perl -pi.bak
+s/foo/bar/;</PRE
+><P
+CLASS="para"
+>which is equivalent to:</P
+><PRE
+CLASS="programlisting"
+>#!/usr/bin/perl
+while (&lt;&gt;) {
+    if ($ARGV ne $oldargv) {
+        rename($ARGV, $ARGV . '.bak');
+        open(ARGVOUT, &quot;&gt;$ARGV&quot;);
+        select(ARGVOUT);
+        $oldargv = $ARGV;
+    }
+    s/foo/bar/;
+}
+continue {
+    print;        # this prints to original filename
+}
+select(STDOUT);</PRE
+><P
+CLASS="para"
+>except that the <B
+CLASS="emphasis.bold"
+>-i</B
+> form doesn't need to compare <CODE
+CLASS="literal"
+>$ARGV</CODE
+> to <CODE
+CLASS="literal"
+>$oldargv</CODE
+> to
+know when the filename has changed.  It does, however, use <CODE
+CLASS="literal"
+>ARGVOUT</CODE
+> for
+the selected filehandle.  Note that <CODE
+CLASS="literal"
+>STDOUT</CODE
+> is restored as the
+default output filehandle after the loop. You can use <A
+CLASS="xref"
+HREF="ch03_031.htm"
+TITLE="eof"
+><B
+CLASS="xref.cmd"
+>eof</B
+></A
+> without parentheses to locate the end of each input file, 
+in case you want to append to each file, or reset line numbering (see the
+examples of <A
+CLASS="xref"
+HREF="ch03_031.htm"
+TITLE="eof"
+><B
+CLASS="xref.cmd"
+>eof</B
+></A
+> in <A
+CLASS="xref"
+HREF="ch03_01.htm"
+TITLE="Functions"
+>Chapter 3, <CITE
+CLASS="chapter"
+>Functions</CITE
+></A
+>).</P
+></DD
+></DL
+><DL
+CLASS="variablelist"
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-I</B
+><EM
+CLASS="emphasis"
+>directory</EM
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17040"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17043"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17045"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17048"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17051"
+></A
+>Directories specified by <B
+CLASS="emphasis.bold"
+>-I</B
+> are prepended to <B
+CLASS="emphasis.bold"
+>@INC</B
+>, which
+holds the search path for
+modules.  <B
+CLASS="emphasis.bold"
+>-I</B
+> also tells the C preprocessor where to search for
+include files.  The C preprocessor is invoked with <B
+CLASS="emphasis.bold"
+>-P</B
+>; by default it
+searches <EM
+CLASS="emphasis"
+>/usr/include</EM
+> and <EM
+CLASS="emphasis"
+>/usr/lib/perl</EM
+>.  Unless you're going to be
+using the C preprocessor (and almost no one does any more), you're better
+off using the <CODE
+CLASS="literal"
+>use lib</CODE
+> directive within your script.</P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-l</B
+>[<EM
+CLASS="emphasis"
+>octnum</EM
+>]</DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17067"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17070"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17072"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17075"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17077"
+></A
+>Enables automatic line-end processing.  It has two effects:  first, it
+automatically <A
+CLASS="xref"
+HREF="ch03_013.htm"
+TITLE="chomp"
+><B
+CLASS="xref.cmd"
+>chomp</B
+></A
+>s the line terminator when used with <B
+CLASS="emphasis.bold"
+>-n</B
+> or
+<B
+CLASS="emphasis.bold"
+>-p</B
+>, and second, it sets <B
+CLASS="emphasis.bold"
+>$\</B
+> to the value of <EM
+CLASS="emphasis"
+>octnum</EM
+> so any
+print statements will have a line terminator of ASCII value <EM
+CLASS="emphasis"
+>octnum</EM
+>
+added back on.  If <EM
+CLASS="emphasis"
+>octnum</EM
+> is omitted, sets <B
+CLASS="emphasis.bold"
+>$\</B
+> to the current value
+of <B
+CLASS="emphasis.bold"
+>$/</B
+>, typically newline.  So, to trim lines to 80 columns, say this:</P
+><PRE
+CLASS="programlisting"
+>perl -lpe 'substr($_, 80) = &quot;&quot;'</PRE
+><P
+CLASS="para"
+>Note that the assignment <CODE
+CLASS="literal"
+>$\ = $/</CODE
+> is done when the switch is processed,
+so the input record separator can be different from the output record
+separator if the <B
+CLASS="emphasis.bold"
+>-l</B
+> switch is followed by a <B
+CLASS="emphasis.bold"
+>-0</B
+> switch:</P
+><PRE
+CLASS="programlisting"
+>gnufind / -print0 | perl -ln0e 'print &quot;found $_&quot; if -p'</PRE
+><P
+CLASS="para"
+>This sets <B
+CLASS="emphasis.bold"
+>$\</B
+> to newline and later sets <B
+CLASS="emphasis.bold"
+>$/</B
+> to the null character.  (Note that
+<CODE
+CLASS="literal"
+>0</CODE
+> would have been interpreted as part of the <B
+CLASS="emphasis.bold"
+>-l</B
+> switch
+had it followed the <B
+CLASS="emphasis.bold"
+>-l</B
+> directly.  That's why we bundled the <B
+CLASS="emphasis.bold"
+>-n</B
+>
+switch between them.)</P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-m</B
+>[<B
+CLASS="emphasis.bold"
+>-</B
+>]<EM
+CLASS="emphasis"
+>module</EM
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+></P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-M</B
+>[<B
+CLASS="emphasis.bold"
+>-</B
+>]<EM
+CLASS="emphasis"
+>module</EM
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+></P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-M</B
+>[<B
+CLASS="emphasis.bold"
+>-</B
+>]<CODE
+CLASS="literal"
+>'</CODE
+><EM
+CLASS="emphasis"
+>module ...</EM
+><CODE
+CLASS="literal"
+>'</CODE
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+></P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-[mM]</B
+>[<B
+CLASS="emphasis.bold"
+>-</B
+>]<EM
+CLASS="emphasis"
+>module=arg</EM
+>[<EM
+CLASS="emphasis"
+>,arg</EM
+>]<EM
+CLASS="emphasis"
+>...</EM
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+></P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-m</B
+><EM
+CLASS="emphasis"
+>module</EM
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+>Executes <CODE
+CLASS="literal"
+>use</CODE
+> <EM
+CLASS="emphasis"
+>module</EM
+><CODE
+CLASS="literal"
+>()</CODE
+> before executing your script.<A
+CLASS="indexterm"
+NAME="AUTOID-17143"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17146"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17148"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17150"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17153"
+></A
+></P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-M</B
+><EM
+CLASS="emphasis"
+>module</EM
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+>Executes <CODE
+CLASS="literal"
+>use</CODE
+> <EM
+CLASS="emphasis"
+>module</EM
+> before executing your
+script.  The command is formed by mere interpolation, so you can use
+quotes to add extra code after the module name, for example,
+<CODE
+CLASS="literal"
+>-M'module qw(foo bar)'</CODE
+>.
+If the first character after the <B
+CLASS="emphasis.bold"
+>-M</B
+> or <B
+CLASS="emphasis.bold"
+>-m</B
+> is a minus (<B
+CLASS="emphasis.bold"
+>-</B
+>),
+then the <A
+CLASS="xref"
+HREF="ch03_185.htm"
+TITLE="use"
+><B
+CLASS="xref.cmd"
+>use</B
+></A
+> is replaced with <A
+CLASS="xref"
+HREF="ch03_100.htm"
+TITLE="no"
+><B
+CLASS="xref.cmd"
+>no</B
+></A
+>.</P
+><P
+CLASS="para"
+>A little built-in syntactic sugar means you can also say
+<CODE
+CLASS="literal"
+>-mmodule=foo,bar</CODE
+> or <CODE
+CLASS="literal"
+>-Mmodule=foo,bar</CODE
+> as a shortcut for
+<CODE
+CLASS="literal"
+>-M'module qw(foo bar)'</CODE
+>.  This avoids the need to use quotes when
+importing symbols.  The actual code generated by <CODE
+CLASS="literal"
+>-Mmodule=foo,bar</CODE
+> is:</P
+><PRE
+CLASS="programlisting"
+>use module split(/,/, q{foo, bar})</PRE
+><P
+CLASS="para"
+>Note that the <CODE
+CLASS="literal"
+>=</CODE
+> form
+removes the distinction between <CODE
+CLASS="literal"
+>-m</CODE
+> and <CODE
+CLASS="literal"
+>-M</CODE
+>.</P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-n  </B
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17184"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17187"
+></A
+>Causes Perl to assume the following loop around your script, which
+makes it iterate over filename arguments rather as <EM
+CLASS="emphasis"
+>sed -n</EM
+> or
+<EM
+CLASS="emphasis"
+>awk</EM
+> do:</P
+><PRE
+CLASS="programlisting"
+>LINE:
+while (&lt;&gt;) {
+    ...                # your script goes here
+}</PRE
+><P
+CLASS="para"
+>Note that the lines are not printed by default.  See <B
+CLASS="emphasis.bold"
+>-p</B
+> to have
+lines printed.  Here is an efficient way to delete all files older than
+a week, assuming you're on UNIX:</P
+><PRE
+CLASS="programlisting"
+>find . -mtime +7 -print | perl -nle unlink</PRE
+><P
+CLASS="para"
+>This is faster than using the <EM
+CLASS="emphasis"
+>-exec</EM
+> switch of <EM
+CLASS="emphasis"
+>find</EM
+>(1) because you don't
+have to start a process on every filename found.
+By an amazing coincidence, <CODE
+CLASS="literal"
+>BEGIN</CODE
+> and <CODE
+CLASS="literal"
+>END</CODE
+> blocks may be used to
+capture control before or after the implicit loop, just as in <EM
+CLASS="emphasis"
+>awk</EM
+>.</P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-p  </B
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17206"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17209"
+></A
+>Causes Perl to assume the following loop around your script, which
+makes it iterate over filename arguments rather as <EM
+CLASS="emphasis"
+>sed</EM
+> does:</P
+><PRE
+CLASS="programlisting"
+>LINE:
+while (&lt;&gt;) {
+    ...                # your script goes here
+} continue {
+    print;
+}</PRE
+><P
+CLASS="para"
+>Note that the lines are printed automatically.  To suppress printing
+use the <B
+CLASS="emphasis.bold"
+>-n</B
+> switch.  A <B
+CLASS="emphasis.bold"
+>-p</B
+> overrides a <B
+CLASS="emphasis.bold"
+>-n</B
+> switch. By yet another amazing coincidence, <CODE
+CLASS="literal"
+>BEGIN</CODE
+> and <CODE
+CLASS="literal"
+>END</CODE
+> blocks may be
+used to capture control before or after the implicit loop, just as in
+<EM
+CLASS="emphasis"
+>awk</EM
+>.</P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-P  </B
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17225"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17228"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17230"
+></A
+>Causes your script to be run through the C preprocessor before
+compilation by Perl.  (Since both comments and <EM
+CLASS="emphasis"
+>cpp</EM
+>(1) directives begin
+with the <CODE
+CLASS="literal"
+>#</CODE
+> character, you should avoid starting comments with any words
+recognized by the C preprocessor such as &quot;<CODE
+CLASS="literal"
+>if</CODE
+>&quot;, &quot;<CODE
+CLASS="literal"
+>else</CODE
+>&quot; or &quot;<CODE
+CLASS="literal"
+>define</CODE
+>&quot;.)</P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-s  </B
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17242"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17245"
+></A
+>Enables some rudimentary switch parsing for switches on the command line
+after the script name but before any filename arguments or &quot;<B
+CLASS="emphasis.bold"
+>--</B
+>&quot;
+switch terminator.  Any switch found there is removed from <B
+CLASS="emphasis.bold"
+>@ARGV</B
+>, and
+a variable of the same name as the switch is set in the Perl script.
+No switch bundling is allowed, since multi-character switches are allowed.
+The following script prints &quot;<CODE
+CLASS="literal"
+>true</CODE
+>&quot; if and only if the script is invoked
+with a <CODE
+CLASS="literal"
+>-xyz</CODE
+> switch.</P
+><PRE
+CLASS="programlisting"
+>#!/usr/bin/perl -s
+if ($xyz) { print &quot;true\n&quot;; }</PRE
+><P
+CLASS="para"
+>If the switch in question is followed by an equals sign, the variable is
+set to whatever follows the equals sign in that argument.
+The following script prints &quot;<CODE
+CLASS="literal"
+>true</CODE
+>&quot; if and only if the script is invoked
+with a <CODE
+CLASS="literal"
+>-xyz=abc</CODE
+> switch.</P
+><PRE
+CLASS="programlisting"
+>#!/usr/bin/perl -s
+if ($xyz eq 'abc') { print &quot;true\n&quot;; }</PRE
+><P
+CLASS="para"
+></P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-S  </B
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17262"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17265"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17267"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17269"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17272"
+></A
+>Makes Perl use the <CODE
+CLASS="literal"
+>PATH</CODE
+> environment variable to search for the
+script (unless the name of the script starts with a slash).  Typically
+this is used to emulate <CODE
+CLASS="literal"
+>#!</CODE
+> startup on machines that don't support <CODE
+CLASS="literal"
+>#!</CODE
+>,
+in the following manner:</P
+><PRE
+CLASS="programlisting"
+>#!/usr/bin/perl
+eval &quot;exec /usr/bin/perl -S $0 $*&quot;
+        if $running_under_some_shell;</PRE
+><P
+CLASS="para"
+>The system ignores the first line and feeds the script to <EM
+CLASS="emphasis"
+>/bin/sh</EM
+>,
+which proceeds to try to execute the Perl script as a shell script.
+The shell executes the second line as a normal shell command, and thus
+starts up the Perl interpreter.  On some systems <B
+CLASS="emphasis.bold"
+>$0</B
+> doesn't always
+contain the full pathname, so <B
+CLASS="emphasis.bold"
+>-S</B
+> tells Perl to search for the
+script if necessary. After Perl locates the script, it parses the
+lines and ignores them because the variable <CODE
+CLASS="literal"
+>$running_under_some_shell</CODE
+>
+is never true.  A better construct than <CODE
+CLASS="literal"
+>$*</CODE
+> would be <CODE
+CLASS="literal"
+>${1+&quot;$@&quot;}</CODE
+>, which
+handles embedded spaces and such in the filenames, but doesn't work if
+the script is being interpreted by <EM
+CLASS="emphasis"
+>csh</EM
+>.  In order to start up <EM
+CLASS="emphasis"
+>sh</EM
+> rather
+than <EM
+CLASS="emphasis"
+>csh</EM
+>, some systems have to replace the <CODE
+CLASS="literal"
+>#!</CODE
+> line with a line
+containing just a colon, which Perl will politely ignore.  Other
+systems can't control that, and need a totally devious construct that
+will work under any of <EM
+CLASS="emphasis"
+>csh</EM
+>, <EM
+CLASS="emphasis"
+>sh</EM
+>, or <EM
+CLASS="emphasis"
+>perl</EM
+>, such as the following:</P
+><PRE
+CLASS="programlisting"
+>eval '(exit $?0)' &amp;&amp; eval 'exec /usr/bin/perl -S $0 ${1+&quot;$@&quot;}'
+    &amp; eval 'exec /usr/bin/perl -S $0 $argv:q'
+                   if 0;</PRE
+><P
+CLASS="para"
+>Yes, it's ugly, but so are the systems that work[<A
+CLASS="footnote"
+HREF="#AUTOID-17295"
+>2</A
+>]
+this way.</P
+><BLOCKQUOTE
+CLASS="footnote"
+><DIV
+CLASS="footnote"
+><P
+CLASS="para"
+><A
+CLASS="footnote"
+NAME="AUTOID-17295"
+>[2]</A
+> We use the term advisedly.</P
+></DIV
+></BLOCKQUOTE
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-T  </B
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17302"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17305"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17307"
+></A
+>Forces &quot;taint&quot; checks to be turned on so you can test them.  Ordinarily
+these checks are done only when running setuid or setgid.  It's a good
+idea to turn them on explicitly for programs run on another's behalf,
+such as CGI programs.  See &quot;Cooperating with Strangers&quot; later in
+this chapter.</P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-u  </B
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17314"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17317"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17319"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17321"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17324"
+></A
+>Causes Perl to dump core after compiling your script.  You can then
+take this core dump and turn it into an executable file by using the
+<EM
+CLASS="emphasis"
+>undump</EM
+> program (not supplied).  This speeds startup at the expense of
+some disk space (which you can minimize by stripping the executable).
+If you want to execute a portion of your script before dumping,
+use Perl's <A
+CLASS="xref"
+HREF="ch03_029.htm"
+TITLE="dump"
+><B
+CLASS="xref.cmd"
+>dump</B
+></A
+> operator instead.  Note:  availability of <EM
+CLASS="emphasis"
+>undump</EM
+> is
+platform specific; it may not be available for a specific port of
+Perl.</P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-U  </B
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17335"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17338"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17340"
+></A
+>Allows Perl to do unsafe operations.  Currently the only &quot;unsafe&quot;
+operations are the unlinking of directories while running as superuser,
+and running setuid programs with fatal taint checks turned into
+warnings.</P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-v  </B
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+>Prints the version and patchlevel of your Perl executable.<A
+CLASS="indexterm"
+NAME="AUTOID-17347"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17350"
+></A
+></P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-V  </B
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17357"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17360"
+></A
+>Prints a summary of the major Perl configuration values and the current
+value of <B
+CLASS="emphasis.bold"
+>@INC</B
+>.</P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-V:</B
+><EM
+CLASS="emphasis"
+>name</EM
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+>Prints to <CODE
+CLASS="literal"
+>STDOUT</CODE
+> the value of the named configuration variable.</P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-w</B
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17375"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17378"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17380"
+></A
+>Prints warnings about identifiers that are mentioned only once, and
+scalar variables that are used before being set.  Also warns about
+redefined subroutines, and references to undefined filehandles or
+filehandles opened read-only that you are attempting to write on.  Also
+warns you if you use a non-number as though it were a number,
+or if you use an array as though it were a scalar, or if your
+subroutines recurse more than 100 deep, and innumerable other things.
+See every entry labeled (W) in <A
+CLASS="xref"
+HREF="ch09_01.htm"
+TITLE="Diagnostic Messages"
+>Chapter 9, <CITE
+CLASS="chapter"
+>Diagnostic Messages</CITE
+></A
+>.</P
+></DD
+><DT
+CLASS="term"
+><B
+CLASS="emphasis.bold"
+>-x</B
+><EM
+CLASS="emphasis"
+>directory</EM
+></DT
+><DD
+CLASS="listitem"
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17389"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17392"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17394"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17397"
+></A
+>Tells Perl to extract a script that is embedded in a message.  Leading garbage
+will be discarded until the first line that starts with <CODE
+CLASS="literal"
+>#!</CODE
+> and
+contains the string &quot;<CODE
+CLASS="literal"
+>perl</CODE
+>&quot;.  Any meaningful switches on that line after
+the word &quot;<CODE
+CLASS="literal"
+>perl</CODE
+>&quot; will be applied.  If a directory name is specified, Perl
+will switch to that directory before running the script.  The <B
+CLASS="emphasis.bold"
+>-x</B
+>
+switch only controls the disposal of leading garbage.  The script
+must be terminated with <CODE
+CLASS="literal"
+>__END__</CODE
+> or <CODE
+CLASS="literal"
+>__DATA__</CODE
+> if there is
+trailing garbage to be ignored.  (The script can process any or all of the
+trailing garbage via the <CODE
+CLASS="literal"
+>DATA</CODE
+> filehandle if desired.)</P
+></DD
+></DL
+><A
+CLASS="indexterm"
+NAME="AUTOID-17407"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17408"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17409"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17410"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17411"
+></A
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="htmlnav"
+><P
+></P
+><HR
+ALIGN="LEFT"
+WIDTH="515"
+TITLE="footer"><TABLE
+WIDTH="515"
+BORDER="0"
+CELLSPACING="0"
+CELLPADDING="0"
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+WIDTH="172"
+><A
+CLASS="SECT1"
+HREF="ch05_05.htm"
+TITLE="5.5 Some Hints About Object Design"
+><IMG
+SRC="../gifs/txtpreva.gif"
+ALT="Previous: 5.5 Some Hints About Object Design"
+BORDER="0"></A
+></TD
+><TD
+ALIGN="CENTER"
+VALIGN="TOP"
+WIDTH="171"
+><A
+CLASS="book"
+HREF="index.htm"
+TITLE="Programming Perl"
+><IMG
+SRC="../gifs/txthome.gif"
+ALT="Programming Perl"
+BORDER="0"></A
+></TD
+><TD
+ALIGN="RIGHT"
+VALIGN="TOP"
+WIDTH="172"
+><A
+CLASS="SECT1"
+HREF="ch06_02.htm"
+TITLE="6.2 Cooperating with Other Processes"
+><IMG
+SRC="../gifs/txtnexta.gif"
+ALT="Next: 6.2 Cooperating with Other Processes"
+BORDER="0"></A
+></TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+WIDTH="172"
+>5.5 Some Hints About Object Design</TD
+><TD
+ALIGN="CENTER"
+VALIGN="TOP"
+WIDTH="171"
+><A
+CLASS="index"
+HREF="index/idx_0.htm"
+TITLE="Book Index"
+><IMG
+SRC="../gifs/index.gif"
+ALT="Book Index"
+BORDER="0"></A
+></TD
+><TD
+ALIGN="RIGHT"
+VALIGN="TOP"
+WIDTH="172"
+>6.2 Cooperating with Other Processes</TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="515"
+TITLE="footer"><P
+CLASS="nav"
+><FONT
+SIZE="-1"
+>[ <A
+HREF="../index.htm"
+TITLE="The Perl CD Bookshelf"
+>Library Home</A
+> | <A
+HREF="../perlnut/index.htm"
+TITLE="Perl in a Nutshell"
+>Perl in a Nutshell</A
+> | <A
+HREF="../learn/index.htm"
+TITLE="Learning Perl"
+>Learning Perl</A
+> | <A
+HREF="../learn32/index.htm"
+TITLE="Learning Perl on Win32 Systems"
+>Learning Perl on Win32</A
+> | <A
+HREF="index.htm"
+TITLE="Programming Perl"
+>Programming Perl</A
+> | <A
+HREF="../advprog/index.htm"
+TITLE="Advanced Perl Programming"
+>Advanced Perl Programming</A
+> | <A
+HREF="../cookbook/index.htm"
+TITLE="Perl Cookbook"
+>Perl Cookbook</A
+> ]</FONT
+></P
+></DIV
+></BODY
+></HTML
+>

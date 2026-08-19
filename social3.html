@@ -1,0 +1,1159 @@
+<HTML
+><HEAD
+>
+<TITLE>[Chapter 6] 6.3 Cooperating with Strangers</TITLE>
+<META
+NAME="DC.title"
+CONTENT="Programming Perl"><META
+NAME="DC.creator"
+CONTENT="Larry Wall, Tom Christiansen &amp; Randal L. Schwartz"><META
+NAME="DC.publisher"
+CONTENT="O'Reilly &amp; Associates, Inc."><META
+NAME="DC.date"
+CONTENT="1999-07-02T02:00:03Z"><META
+NAME="DC.type"
+CONTENT="Text.Monograph"><META
+NAME="DC.format"
+CONTENT="text/html"
+SCHEME="MIME"><META
+NAME="DC.source"
+CONTENT="1-56592-149-6"
+SCHEME="ISBN"><META
+NAME="DC.language"
+CONTENT="en-US"><META
+NAME="generator"
+CONTENT="Jade 1.1/O'Reilly DocBook 3.0 to HTML 4.0"><LINK
+REV="made"
+HREF="mailto:online-books@oreilly.com"
+TITLE="Online Books Comments"><LINK
+REL="up"
+HREF="ch06_01.htm"
+TITLE="6. Social Engineering"><LINK
+REL="prev"
+HREF="ch06_02.htm"
+TITLE="6.2 Cooperating with Other Processes"><LINK
+REL="next"
+HREF="ch06_04.htm"
+TITLE="6.4 Cooperating with Other Languages"></HEAD
+><BODY
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+><DIV
+CLASS="htmlnav"
+><H1
+><IMG
+SRC="gifs/smbanner.gif"
+ALT="Programming Perl"
+USEMAP="#srchmap"
+BORDER="0"></H1
+><MAP
+NAME="srchmap"
+><AREA
+SHAPE="RECT"
+COORDS="0,0,466,65"
+HREF="index.htm"
+ALT="Programming Perl"><AREA
+SHAPE="RECT"
+COORDS="467,0,514,18"
+HREF="../search/psrch.htm"
+ALT="Search this book"></MAP
+><TABLE
+WIDTH="515"
+BORDER="0"
+CELLSPACING="0"
+CELLPADDING="0"
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+WIDTH="172"
+><A
+CLASS="SECT1"
+HREF="ch06_02.htm"
+TITLE="6.2 Cooperating with Other Processes"
+><IMG
+SRC="../gifs/txtpreva.gif"
+ALT="Previous: 6.2 Cooperating with Other Processes"
+BORDER="0"></A
+></TD
+><TD
+ALIGN="CENTER"
+VALIGN="TOP"
+WIDTH="171"
+><B
+><FONT
+FACE="ARIEL,HELVETICA,HELV,SANSERIF"
+SIZE="-1"
+><A
+CLASS="chapter"
+REL="up"
+HREF="ch06_01.htm"
+TITLE="6. Social Engineering"
+>Chapter 6<BR>Social Engineering</A
+></FONT
+></B
+></TD
+><TD
+ALIGN="RIGHT"
+VALIGN="TOP"
+WIDTH="172"
+><A
+CLASS="SECT1"
+HREF="ch06_04.htm"
+TITLE="6.4 Cooperating with Other Languages"
+><IMG
+SRC="../gifs/txtnexta.gif"
+ALT="Next: 6.4 Cooperating with Other Languages"
+BORDER="0"></A
+></TD
+></TR
+></TABLE
+>&nbsp;<HR
+ALIGN="LEFT"
+WIDTH="515"
+TITLE="footer"></DIV
+><DIV
+CLASS="SECT1"
+><H2
+CLASS="sect1"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-3"
+>6.3 Cooperating with Strangers</A
+></H2
+><P
+CLASS="para"
+>Whether you're dealing with a user sitting at the keyboard typing
+commands, or someone sending information across the network, you need to
+be careful about the data coming into your programs, since the other
+person may, either maliciously or accidentally, send you data that will
+do more harm than good.  Perl provides a mechanism to isolate tainted
+data so that you won't use it to do something you didn't intend to do.
+For instance, if you mistakenly trust a tainted filename, you might end
+up appending an entry to your <EM
+CLASS="emphasis"
+>passwd</EM
+> file when you thought you were
+appending to a log file.</P
+><P
+CLASS="para"
+>And if the data you get from a stranger happens to be a bit of program
+to execute, you need to be even more careful.  Perl provides a method of
+dealing with that, too.  But first we'll talk about ordinary tainted data.</P
+><DIV
+CLASS="sect2"
+><H3
+CLASS="sect2"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-3.1"
+>6.3.1 Handling Insecure Data</A
+></H3
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="CH06.SEC1"
+></A
+><A
+CLASS="indexterm"
+NAME="CH06.SEC2"
+></A
+>Perl is designed to make it easy to program securely even when your
+program is being used by someone with fewer privileges than the program
+itself.  That is, some programs need to grant some extra privileges to
+their users, without giving away other privileges that they didn't intend to
+give away.  Setuid and setgid programs fall into this category, as do
+many network servers, and the programs the servers themselves run, such
+as CGI scripts.  At a fundamental level, Perl is easy to program
+securely because it's straightforward and self-contained.  Unlike most
+command-line shells, which are based on multiple mysterious substitution
+passes on each line of the script, Perl uses a more conventional
+evaluation scheme with fewer hidden snags.  Additionally, because the
+language has more built-in functionality, it can rely less upon external
+(and possibly untrustworthy) programs to accomplish its purposes.</P
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17866"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17869"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17871"
+></A
+>But beyond that, Perl automatically enables a special security-checking
+mechanism called <EM
+CLASS="emphasis"
+>taint mode</EM
+> whenever it detects its program running
+with differing real and effective user or group IDs.[<A
+CLASS="footnote"
+HREF="#AUTOID-17874"
+>6</A
+>]
+You can also enable taint mode explicitly by using the <B
+CLASS="emphasis.bold"
+>-T</B
+>
+command line switch.  This is suggested for server programs and any
+program run on behalf of someone else, such as a CGI script.</P
+><BLOCKQUOTE
+CLASS="footnote"
+><DIV
+CLASS="footnote"
+><P
+CLASS="para"
+><A
+CLASS="footnote"
+NAME="AUTOID-17874"
+>[6]</A
+> The setuid bit in UNIX permissions is mode 04000, and the setgid bit is
+02000; either or both may be set to grant the user of the program some
+of the privileges of the owner (or owners) of the program.  Other
+operating systems may confer special privileges on programs in other ways,
+but the principle is the same.</P
+></DIV
+></BLOCKQUOTE
+><P
+CLASS="para"
+>While in this mode, Perl takes special precautions called <EM
+CLASS="emphasis"
+>taint
+checks</EM
+> to prevent both obvious and subtle traps.  Some of these checks
+are reasonably simple, such as verifying that path directories aren't
+writable by others; careful programmers have always used checks like
+these.  Other checks, however, are best supported by the language itself,
+and it is these checks especially that contribute to making a setuid Perl
+program more secure than the corresponding C program.</P
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17880"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17884"
+></A
+>The principle is simple:
+you may not use data derived from outside your program to affect something
+else outside your program&nbsp;- at least, not by accident.  All command-line
+arguments, environment variables, and file input are marked as tainted.
+Tainted data may not be used directly or indirectly in any command that
+invokes a subshell, nor in any command that modifies files, directories,
+or processes.  Any variable set within an expression that has previously
+referenced a tainted value becomes tainted itself, even if it is logically
+impossible for the tainted value to influence the variable.  Because
+taintedness is associated with each scalar value, some elements of an
+array or hash might be tainted and others not.</P
+><P
+CLASS="para"
+>The following code illustrates how tainting would work if you executed all
+these statements in order:</P
+><PRE
+CLASS="programlisting"
+>$arg = shift;               # $arg is tainted
+$hid = &quot;$arg, 'bar'&quot;;       # $hid is also tainted
+$line = &lt;&gt;;                 # Tainted
+$path = $ENV{PATH};         # Tainted, but see below
+$mine = 'abc';              # Not tainted
+$shout = `echo abc`;        # Tainted
+$shout = `echo $shout`;     # Insecure</PRE
+><PRE
+CLASS="programlisting"
+>system &quot;echo $arg&quot;;         # Insecure (uses sh)
+system &quot;/bin/echo&quot;, $arg;   # OK (doesn't use sh)
+system &quot;echo $mine&quot;;        # Insecure until PATH set
+system &quot;echo $hid&quot;;         # Insecure two ways</PRE
+><PRE
+CLASS="programlisting"
+>$path = $ENV{PATH};         # $path tainted</PRE
+><PRE
+CLASS="programlisting"
+>$ENV{PATH} = '/bin:/usr/bin'; 
+$ENV{IFS} = &quot;&quot; if $ENV{IFS} ne &quot;&quot;;</PRE
+><PRE
+CLASS="programlisting"
+>$path = $ENV{PATH};         # $path now NOT tainted
+system &quot;echo $mine&quot;;        # OK, is secure now!
+system &quot;echo $hid&quot;;         # Insecure via $hid still</PRE
+><PRE
+CLASS="programlisting"
+>open(OOF, &quot;&lt; $arg&quot;);        # OK (read-only file)
+open(OOF, &quot;&gt; $arg&quot;);        # Insecure (trying to write)</PRE
+><PRE
+CLASS="programlisting"
+>open(OOF, &quot;echo $arg|&quot;);    # Insecure via $arg, but...
+open(OOF,&quot;-|&quot;)
+    or exec 'echo', $arg;   # Considered OK</PRE
+><PRE
+CLASS="programlisting"
+>$shout = `echo $arg`;       # Insecure via $arg</PRE
+><PRE
+CLASS="programlisting"
+>unlink $mine, $arg;         # Insecure via $arg
+umask $arg;                 # Insecure via $arg</PRE
+><PRE
+CLASS="programlisting"
+>exec &quot;echo $arg&quot;;           # Single arg to exec or system is insecure
+exec &quot;echo&quot;, $arg;          # Considered OK (doesn't use the shell)
+exec &quot;sh&quot;, '-c', $arg;      # Considered OK, but isn't really</PRE
+><P
+CLASS="para"
+>If you try to do something insecure, you get a fatal error saying
+something like &quot;<CODE
+CLASS="literal"
+>Insecure dependency</CODE
+>&quot; or
+&quot;<CODE
+CLASS="literal"
+>Insecure $ENV{PATH}</CODE
+>&quot;. You can still write an insecure <A
+CLASS="xref"
+HREF="ch03_167.htm"
+TITLE="system"
+><B
+CLASS="xref.cmd"
+>system</B
+></A
+> or <A
+CLASS="xref"
+HREF="ch03_033.htm"
+TITLE="exec"
+><B
+CLASS="xref.cmd"
+>exec</B
+></A
+>, but only
+by explicitly doing something like the last example.  If you pass
+a <CODE
+CLASS="replaceable"
+><I
+>LIST</I
+></CODE
+>
+to <A
+CLASS="xref"
+HREF="ch03_167.htm"
+TITLE="system"
+><B
+CLASS="xref.cmd"
+>system</B
+></A
+> or <A
+CLASS="xref"
+HREF="ch03_033.htm"
+TITLE="exec"
+><B
+CLASS="xref.cmd"
+>exec</B
+></A
+>, you are presumed to know what you're
+doing.</P
+><DIV
+CLASS="sect3"
+><H4
+CLASS="sect3"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-3.1.1"
+>6.3.1.1 Detecting and laundering tainted data</A
+></H4
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17909"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17911"
+></A
+>To test whether a variable contains tainted data, you can use the following
+<CODE
+CLASS="literal"
+>is_tainted()</CODE
+> function.</P
+><PRE
+CLASS="programlisting"
+>sub is_tainted {
+    not eval { 
+        join(&quot;&quot;,@_), kill 0; 
+        1;  
+    };
+}</PRE
+><P
+CLASS="para"
+>This function makes use of the obscure fact that the <A
+CLASS="xref"
+HREF="ch03_080.htm"
+TITLE="kill"
+><B
+CLASS="xref.cmd"
+>kill</B
+></A
+> function
+tests for taintedness even when no process IDs are supplied to send the
+signal to.  More important, the function also depends on the fact that
+using tainted data anywhere within an expression renders the entire
+expression tainted.  It would be inefficient for every operator to test
+every argument for taintedness.  Instead, a slightly more efficient and
+conservative approach is used: if any tainted value has been accessed
+within the same expression, the whole expression is considered tainted.</P
+><P
+CLASS="para"
+>But testing for taintedness only gets you so far.  Usually you know
+perfectly well which variables contain tainted data&nbsp;- you just have to
+clear the data's taintedness.  The only way to bypass the tainting
+mechanism is by referencing subpattern variables set by an earlier
+regular expression match.  The presumption is that if you reference a
+substring using <B
+CLASS="emphasis.bold"
+>$1</B
+>, <B
+CLASS="emphasis.bold"
+>$2</B
+>, 
+and so on, you knew what you were doing when
+you wrote the pattern, and wrote it to weed out anything dangerous.  So
+you need to give it a bit of thought&nbsp;- don't just blindly untaint
+anything, or you defeat the entire mechanism.  Also, it's better to
+verify that the variable has only good characters rather than checking
+whether it has any bad characters.  That's because it's far too easy to
+miss bad characters that you never thought of.</P
+><P
+CLASS="para"
+>For example, here's a test to make sure <CODE
+CLASS="literal"
+>$addr</CODE
+> contains nothing
+but &quot;word&quot; characters (alphabetics, numerics, and underscores), or a
+hyphen, an <CODE
+CLASS="literal"
+>@</CODE
+> sign, or a dot.</P
+><PRE
+CLASS="programlisting"
+>if ($addr =~ /^([-\@\w.]+)$/) {     
+    $addr = $1;                     # $addr now untainted
+}
+else {
+    die &quot;Bad data in $addr&quot;;        # log this somewhere
+}</PRE
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17926"
+></A
+>This is fairly secure since <CODE
+CLASS="literal"
+>/\w+/</CODE
+> doesn't normally match shell
+metacharacters, nor are dot, hyphen, or &quot;at&quot; going to mean anything
+special to the shell.  Had we used <CODE
+CLASS="literal"
+>/(.+)/</CODE
+> instead, it would have been
+insecure because that pattern lets everything through.  But Perl doesn't
+check for that.  So when untainting, you must be exceedingly careful
+with your patterns.  Laundering data using regular expressions is the
+<EM
+CLASS="emphasis"
+>only</EM
+> internal mechanism for untainting dirty data.
+(But see &quot;Cleaning Up Your Path&quot; later, about forking a child of lesser privilege.)</P
+></DIV
+><DIV
+CLASS="sect3"
+><H4
+CLASS="sect3"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-3.1.2"
+>6.3.1.2 Cleaning up your path</A
+></H4
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17935"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17937"
+></A
+>When you run a program from within Perl, whether you're using the <CODE
+CLASS="literal"
+>`...`</CODE
+>, <B
+CLASS="emphasis.bold"
+>glob</B
+>, 
+<A
+CLASS="xref"
+HREF="ch03_167.htm"
+TITLE="system"
+><B
+CLASS="xref.cmd"
+>system</B
+></A
+>, <A
+CLASS="xref"
+HREF="ch03_033.htm"
+TITLE="exec"
+><B
+CLASS="xref.cmd"
+>exec</B
+></A
+>, or <A
+CLASS="xref"
+HREF="ch03_102.htm"
+TITLE="open"
+><B
+CLASS="xref.cmd"
+>open</B
+></A
+> commands, Perl checks to make sure your
+PATH environment variable is secure.  If you get the &quot;<CODE
+CLASS="literal"
+>Insecure
+$ENV{PATH}</CODE
+>&quot; message, you need to set <CODE
+CLASS="literal"
+>$ENV{PATH}</CODE
+> to a known value,
+and each directory in the path must be non-writable by anyone other than
+the directory's owner and group.  You may be surprised to get this
+message even when the filename of your executable is absolute
+(that is, fully qualified from the root of your filesystem).
+True, when you supply an absolute filename, the PATH isn't used to locate
+the executable.  However, Perl doesn't trust the program you're running
+not to turn right around and execute some other program using the 
+insecure PATH.  So it forces you to set a secure PATH anyway.</P
+><P
+CLASS="para"
+>Perl has its own notion of which operations are dangerous, but it's
+still possible to get into trouble with other operations that don't care
+whether they use tainted values.  Make judicious use of the file tests
+in dealing with any user-supplied filename.  When possible, do your
+<A
+CLASS="xref"
+HREF="ch03_102.htm"
+TITLE="open"
+><B
+CLASS="xref.cmd"
+>open</B
+></A
+> operations and such after setting <CODE
+CLASS="literal"
+>$&gt; = $&lt;</CODE
+>.  (Remember
+that under UNIX you have group IDs, too!)  Perl doesn't prevent you from
+opening tainted filenames for reading, so be careful what you print out.
+The tainting mechanism is intended to prevent stupid mistakes, not to
+remove the need for thought.</P
+><P
+CLASS="para"
+>You may recall that <A
+CLASS="xref"
+HREF="ch03_167.htm"
+TITLE="system"
+><B
+CLASS="xref.cmd"
+>system</B
+></A
+> never calls the shell when you pass it a
+list of arguments, but only when you pass it a string containing shell
+metacharacters.  (The same applies to <A
+CLASS="xref"
+HREF="ch03_033.htm"
+TITLE="exec"
+><B
+CLASS="xref.cmd"
+>exec</B
+></A
+>.)  Since you can explicitly
+bypass the shell by passing a list of arguments, this form is not
+considered a dangerous operation.  Unfortunately, the <A
+CLASS="xref"
+HREF="ch03_102.htm"
+TITLE="open"
+><B
+CLASS="xref.cmd"
+>open</B
+></A
+>, <A
+CLASS="xref"
+HREF="ch03_069.htm"
+TITLE="glob"
+><B
+CLASS="xref.cmd"
+>glob</B
+></A
+>,
+and backtick functions provide no such alternate calling convention, so
+more subterfuge will be required.</P
+><P
+CLASS="para"
+>Perl provides a reasonably safe way to open a file or pipe from within a
+setuid or setgid program: just create a child process with reduced
+privilege who does the dirty work for you.  First, fork a child using
+the special <A
+CLASS="xref"
+HREF="ch03_102.htm"
+TITLE="open"
+><B
+CLASS="xref.cmd"
+>open</B
+></A
+> syntax that connects the parent and child by a pipe.
+Now the child resets its user and group IDs (and any other per-process
+attributes, like environment variables, umasks, current working
+directories) back to the originals or known safe values.  Then the child
+process, which no longer has any special permissions, does the <A
+CLASS="xref"
+HREF="ch03_102.htm"
+TITLE="open"
+><B
+CLASS="xref.cmd"
+>open</B
+></A
+>
+or other system call.  Finally, the child passes whatever data it
+managed to access back to the parent.  Since the file or pipe was opened
+in the child while running under less privilege than the parent, the
+child is unlikely to be tricked into doing something it shouldn't.</P
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17959"
+></A
+>For example, here's how you might emulate backticks in reasonable
+safety.  Notice how the <A
+CLASS="xref"
+HREF="ch03_033.htm"
+TITLE="exec"
+><B
+CLASS="xref.cmd"
+>exec</B
+></A
+> is not called with a string that the
+shell could expand.  This is by far the best way to call something that
+might be subjected to shell escapes: just never call the shell at all.
+By the time we get to the <A
+CLASS="xref"
+HREF="ch03_033.htm"
+TITLE="exec"
+><B
+CLASS="xref.cmd"
+>exec</B
+></A
+>, tainting is turned off, however, so
+be careful what you call and what you pass it.</P
+><PRE
+CLASS="programlisting"
+>use English;  
+die unless defined($pid = open(KID, &quot;-|&quot;));
+if ($pid) {           # parent
+    while (&lt;KID&gt;) {
+        # do something
+    }
+    close KID;
+}
+else {
+    $EUID = $UID;
+    $EGID = $GID;    # XXX: initgroups() not called
+    $ENV{PATH} = &quot;/bin:/usr/bin&quot;;
+    exec 'myprog', 'arg1', 'arg2';
+    die &quot;can't exec myprog: $!&quot;;
+}</PRE
+><P
+CLASS="para"
+>A similar strategy would work for wildcard expansion via <B
+CLASS="emphasis.bold"
+>glob</B
+>.</P
+></DIV
+><DIV
+CLASS="sect3"
+><H4
+CLASS="sect3"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-3.1.3"
+>6.3.1.3 Security bugs</A
+></H4
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-17970"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17973"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17976"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17979"
+></A
+>Beyond the obvious problems that stem from giving special privileges to
+interpreters as flexible and inscrutable as shells, many versions of
+UNIX have the additional difficulty that any setuid script is inherently
+insecure before it ever gets to the interpreter.  That is, the problem
+is not the script itself, but a race condition in the way kernel invokes
+an interpreter mentioned on the <CODE
+CLASS="literal"
+>#!</CODE
+> line.  (The bug doesn't exist on
+machines that don't recognize <CODE
+CLASS="literal"
+>#!</CODE
+> in the kernel.)  Between the time
+the kernel opens the file to see which interpreter to run and the time
+the (now-setuid) interpreter starts up and reopens the file to interpret
+it, the file in question may have changed, especially if your system
+supports symbolic links.</P
+><P
+CLASS="para"
+>Fortunately, sometimes this kernel &quot;feature&quot; can be disabled.
+Unfortunately, there are two ways to disable it.  The system can
+outlaw scripts with the setuid bit set, which doesn't help much.
+Alternately, it can ignore the setuid bit on scripts.  If the
+latter is true, Perl can emulate the setuid and setgid mechanism when it
+notices the (otherwise useless) setuid/gid bits on Perl scripts.  It does
+this via a special executable called <EM
+CLASS="emphasis"
+>suidperl</EM
+>, which is automatically
+invoked for you if it's needed.</P
+><P
+CLASS="para"
+>However, if the kernel setuid script feature <EM
+CLASS="emphasis"
+>isn't</EM
+> disabled, Perl will
+complain loudly that your setuid script is insecure.  You'll need to
+either disable the kernel setuid script feature,[<A
+CLASS="footnote"
+HREF="#AUTOID-17988"
+>7</A
+>]
+or put a C wrapper around the script.  A C wrapper is just a compiled
+program that does nothing except call your Perl program.   Compiled
+programs are not subject to the kernel bug that plagues setuid scripts.</P
+><BLOCKQUOTE
+CLASS="footnote"
+><DIV
+CLASS="footnote"
+><P
+CLASS="para"
+><A
+CLASS="footnote"
+NAME="AUTOID-17988"
+>[7]</A
+> This may be difficult if your kernel vendor manifests the typical degree
+of deafness.</P
+></DIV
+></BLOCKQUOTE
+><P
+CLASS="para"
+>Here's a simple wrapper, written in C:<A
+CLASS="indexterm"
+NAME="AUTOID-17991"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-17993"
+></A
+></P
+><PRE
+CLASS="programlisting"
+>#define REAL_FILE &quot;/path/to/script&quot;
+main(ac, av) 
+    char **av;
+{
+    execv(REAL_FILE, av);
+}</PRE
+><P
+CLASS="para"
+>Compile this wrapper into a binary executable and then make <EM
+CLASS="emphasis"
+>it</EM
+> rather 
+than your script setuid or setgid.  Be sure to use an absolute filename,
+since C isn't smart enough to do taint checking on your PATH.</P
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-18000"
+></A
+>See the program <EM
+CLASS="emphasis"
+>wrapsuid</EM
+> in the <EM
+CLASS="emphasis"
+>eg</EM
+> directory of your Perl
+distribution for a convenient way to do this automatically for all your
+setuid Perl programs.  It renames your setuid scripts to have a dot on
+the front, and then compiles a wrapper like the one above for each of
+them.  It gives each wrapper the name of the script it replaces.</P
+><P
+CLASS="para"
+>In recent years, some vendors have begun to supply systems free of this
+inherent security bug.  On such systems, when the kernel passes the name
+of the setuid script to open to the interpreter, it no longer passes a
+filename subject to meddling, but instead passes <EM
+CLASS="emphasis"
+>/dev/fd/3</EM
+>.  This is a
+special file already opened on the script, so that there can be no race
+condition for evil scripts to exploit.  On these systems, Perl should be
+compiled with <CODE
+CLASS="literal"
+>-DSETUID_SCRIPTS_ARE_SECURE_NOW</CODE
+>.  The <EM
+CLASS="emphasis"
+>Configure</EM
+>
+program that builds Perl tries to figure this out for itself, so you
+should never have to specify this yourself.  Most modern releases of
+SysVr4 and BSD 4.4 use this approach to avoid the kernel race condition.</P
+><P
+CLASS="para"
+>Prior to release 5.003 of Perl, a bug in the code of <EM
+CLASS="emphasis"
+>suidperl</EM
+> could
+introduce a security hole in systems compiled with strict POSIX
+compliance.  If you must run an earlier version of <EM
+CLASS="emphasis"
+>suidperl</EM
+>, please
+see CERT advisory CA-96.12.</P
+><A
+CLASS="indexterm"
+NAME="AUTOID-18011"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-18012"
+></A
+></DIV
+></DIV
+><DIV
+CLASS="sect2"
+><H3
+CLASS="sect2"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-3.2"
+>6.3.2 Handling Insecure Code</A
+></H3
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="CH06.INSEC1"
+></A
+><A
+CLASS="indexterm"
+NAME="CH06.INSEC2"
+></A
+>Taint checking is useful when you trust yourself to write honest code,
+but don't necessarily trust whoever's feeding you data not to try to
+trick you into doing something bad.  Taint checking is the sort of security
+blanket that's useful for setuid programs and programs launched on
+someone else's behalf, like CGI programs.</P
+><P
+CLASS="para"
+>It's quite another matter when you don't even trust the writer of the
+code you're running.  What if you fetch an applet off the Net and it
+contains a virus, or a time bomb, or a Trojan horse?  Taint checking is
+useless here, because the code itself may be tainted, while the data
+you're feeding it presumably is not.  You're placing yourself in the
+position of someone who receives a mysterious device from a stranger,
+with a note that says, &quot;Just hold this to your head and pull the
+trigger.&quot;  Maybe you think it will dry your hair, but you might not think
+so for very long.</P
+><P
+CLASS="para"
+>In this realm, prudence is synonymous with paranoia.  What you want is a
+system in which you can impose a quarantine on suspicious code.  The
+code can continue to exist, and even perform certain functions, but you
+don't let it wander around doing anything it feels like doing.  In Perl,
+you can impose a kind of quarantine using the Safe module.</P
+><DIV
+CLASS="sect3"
+><H4
+CLASS="sect3"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-3.2.1"
+>6.3.2.1 Safe</A
+></H4
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-18027"
+></A
+>The Safe module allows the programmer to set up special compartments in
+which all system operations are trapped and namespace access is
+carefully controlled.  The technical details of this module are
+explained in <A
+CLASS="xref"
+HREF="ch07_01.htm"
+TITLE="The Standard Perl Library"
+>Chapter 7</A
+>.  Here we'll take a more philosophical approach.</P
+><P
+CLASS="para"
+>At the most basic level, a Safe object is like a safe, except the idea
+is to keep the bad people in, not out.  In the UNIX world, there is a system
+call known as <EM
+CLASS="emphasis"
+>chroot</EM
+>(2) that can permanently consign a process to run
+only in a subdirectory of the directory structure, in its own private little
+hell, if you will.  Once the process is put there, there is no way
+whatsoever for it to reach anything outside, because there's no way for
+it to name anything outside.  A Safe object is a little like that,
+except that instead of being restricted to a subset of the directory
+structure, it's restricted to a subset of Perl's package structure, which
+is hierarchical just as the directory structure is.  It suffices to give
+the Safe object its own &quot;main package&quot;, so that it can't influence the rest of
+your program.</P
+><P
+CLASS="para"
+>The other important thing about a Safe object is that it limits the
+operations available to the tainted code.  The details of this
+aren't important here, but what is important is that this is under the
+control of your code.  And since you can create multiple Safe objects in
+your program, you can confer various degrees of trust upon various chunks
+of code, depending on where you got them from.  Or more importantly, on whom
+you got them from.  This leads us to the notion of Penguin.</P
+></DIV
+><DIV
+CLASS="sect3"
+><H4
+CLASS="sect3"
+><A
+CLASS="title"
+NAME="PERL2-CH-6-SECT-3.2.2"
+>6.3.2.2 Penguin</A
+></H4
+><P
+CLASS="para"
+><A
+CLASS="indexterm"
+NAME="AUTOID-18036"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-18038"
+></A
+>If you're going to bestow more than the minimal amount of trust on the
+code you get from someone (and you have to, if you think about it), you
+must also trust the mechanism by which the trustworthy code is
+delivered to you.  In the good old days, of course, we just ignored the
+problem, but these days if you do that you get infected by a virus.
+So we're moving toward the day in which most software will be delivered
+with an encrypted seal guaranteeing that it comes from where you think
+it comes from, and that it hasn't been tampered with in the meanwhile.</P
+><P
+CLASS="para"
+>Penguin is a Perl module that allows you to send encrypted, digitally
+signed Perl code (termed &quot;executable content&quot; in Marketese) to a remote machine
+to be executed.  At the other end, it lets you receive code and,
+depending on who signed it, execute it within the constraints of an
+arbitrarily secure Safe object.  You'll note that we didn't say which
+end was the client and which end was the server.  This was intentional,
+because it doesn't really matter.</P
+><P
+CLASS="para"
+>Penguin thus enables you to perform Internet commerce safely, write
+mobile information-gathering agents, distribute &quot;live content&quot;
+web-browser helper applications, perform distributed load-balanced
+computation, update remote software, administer distant machines,
+propagate content-based information, build Internet-wide shared-data
+applications and network application builders, and so on.  And it's
+completely non-proprietary.</P
+><P
+CLASS="para"
+>As its author, Felix Gallo, puts it:</P
+><BLOCKQUOTE
+CLASS="blockquote"
+><P
+CLASS="para"
+>Penguin-as-a-concept grew from early thinking about agent-tcl, a
+language I made up during a heated discussion with the safe-tcl
+people.  Tcl proved to be an inappropriate implementation language.
+Soon after I stopped trying, Sun's Java language arrived on the scene,
+purporting to solve many of the issues I had thought were important.
+However, although superior to tcl, Java is also an inappropriate
+and difficult implementation language.  Hence Perl, hence Penguin.</P
+><P
+CLASS="para"
+>Penguin, with its vastly simplified, superior, and innate methods of
+ensuring safety and security, may become a very interesting tool in
+the repertoires of the many thousands of Perl programmers already
+extant on the Internet.  Once people discover the glass walls of
+Java and the inconsistencies and insecurities engendered in the
+other solutions, we may begin to live in interesting times.</P
+></BLOCKQUOTE
+><P
+CLASS="para"
+>Hmm, we seem to be slipping into a competitive frame of mind here.  Ah,
+well.  The next section should help with that.</P
+><P
+CLASS="para"
+>As of this writing, Penguin is still developing fast enough that it is
+not yet included as part of the standard Perl distribution.  That
+doesn't mean we don't like it.  As usual, consult CPAN for the latest
+details.</P
+><A
+CLASS="indexterm"
+NAME="AUTOID-18048"
+></A
+><A
+CLASS="indexterm"
+NAME="AUTOID-18049"
+></A
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="htmlnav"
+><P
+></P
+><HR
+ALIGN="LEFT"
+WIDTH="515"
+TITLE="footer"><TABLE
+WIDTH="515"
+BORDER="0"
+CELLSPACING="0"
+CELLPADDING="0"
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+WIDTH="172"
+><A
+CLASS="SECT1"
+HREF="ch06_02.htm"
+TITLE="6.2 Cooperating with Other Processes"
+><IMG
+SRC="../gifs/txtpreva.gif"
+ALT="Previous: 6.2 Cooperating with Other Processes"
+BORDER="0"></A
+></TD
+><TD
+ALIGN="CENTER"
+VALIGN="TOP"
+WIDTH="171"
+><A
+CLASS="book"
+HREF="index.htm"
+TITLE="Programming Perl"
+><IMG
+SRC="../gifs/txthome.gif"
+ALT="Programming Perl"
+BORDER="0"></A
+></TD
+><TD
+ALIGN="RIGHT"
+VALIGN="TOP"
+WIDTH="172"
+><A
+CLASS="SECT1"
+HREF="ch06_04.htm"
+TITLE="6.4 Cooperating with Other Languages"
+><IMG
+SRC="../gifs/txtnexta.gif"
+ALT="Next: 6.4 Cooperating with Other Languages"
+BORDER="0"></A
+></TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+WIDTH="172"
+>6.2 Cooperating with Other Processes</TD
+><TD
+ALIGN="CENTER"
+VALIGN="TOP"
+WIDTH="171"
+><A
+CLASS="index"
+HREF="index/idx_0.htm"
+TITLE="Book Index"
+><IMG
+SRC="../gifs/index.gif"
+ALT="Book Index"
+BORDER="0"></A
+></TD
+><TD
+ALIGN="RIGHT"
+VALIGN="TOP"
+WIDTH="172"
+>6.4 Cooperating with Other Languages</TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="515"
+TITLE="footer"><P
+CLASS="nav"
+><FONT
+SIZE="-1"
+>[ <A
+HREF="../index.htm"
+TITLE="The Perl CD Bookshelf"
+>Library Home</A
+> | <A
+HREF="../perlnut/index.htm"
+TITLE="Perl in a Nutshell"
+>Perl in a Nutshell</A
+> | <A
+HREF="../learn/index.htm"
+TITLE="Learning Perl"
+>Learning Perl</A
+> | <A
+HREF="../learn32/index.htm"
+TITLE="Learning Perl on Win32 Systems"
+>Learning Perl on Win32</A
+> | <A
+HREF="index.htm"
+TITLE="Programming Perl"
+>Programming Perl</A
+> | <A
+HREF="../advprog/index.htm"
+TITLE="Advanced Perl Programming"
+>Advanced Perl Programming</A
+> | <A
+HREF="../cookbook/index.htm"
+TITLE="Perl Cookbook"
+>Perl Cookbook</A
+> ]</FONT
+></P
+></DIV
+></BODY
+></HTML
+>
