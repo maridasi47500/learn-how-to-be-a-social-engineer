@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block montitre %}
-debut de mes mots: bienvenue dans social engineer
+debut de mes mots: bienvenue
 {% endblock %}
 {% block content %}
 <h1># learn-how-to-be-a-social-engineer</h1>
@@ -9,9 +9,19 @@ debut de mes mots: bienvenue dans social engineer
  <li>{{ x["first_name"]  }}</li>
 
 {% endfor %} 
-fin de mes mots : popular web scripting languages like Perl, Ruby, PHP, and Python provide taint analysis
+fin de mes mots : Perl doesnt just glue together other computer languages. It also glues together command line interpreters, operating systems, processes, machines, devices, networks, databases, institutions, cultures, Web pages, GUIs, peers, servers, and clients, not to mention people like system administrators, users, and of course, hackers, both naughty and nice. 
+
+So this chapter is about Perls relationship with everything in the world.
+
+Specified line by line via -e switches on the command line.
+
+Contained in the file specified by the first filename on the command line. (Note that systems supporting the #! shebang notation invoke interpreters this way on your behalf.)
+
+Passed in implicitly via standard input. This only works if there are no filename arguments; to pass arguments to a standard-input script you must explicitly specify a - for the script name. For example, under UNIX:
+
+echo print Hello, world | perl -
 {% endblock %}
 {% block liens %}
 <a href="/">welcome</a>
 {% endblock %}
-<a href="/add_one_programminglanguage"> add one programminglanguage</a>
+<a href="/add_one_programminglanguage"> add one programminglanguage</a><a href="/add_one_command_processing"> add one command_processing</a><a href="/add_one_switch"> add one switch</a><a href="/add_one_interprocess_communication"> add one interprocess_communication</a><a href="/add_one_way_handle_insecure_data"> add one way_handle_insecure_data</a><a href="/add_one_way_handle_insecure_code"> add one way_handle_insecure_code</a><a href="/add_one_generate_other_language_in_the_programming_language"> add one generate_other_language_in_the_programming_language</a><a href="/add_one_generate_the_programming_language_from_other_language"> add one generate_the_programming_language_from_other_language</a><a href="/add_one_translate_the_programming_language_to_other_language"> add one translate_the_programming_language_to_other_language</a><a href="/add_one_embedprogramminglanguageinascript"> add one embedprogramminglanguageinascript</a>

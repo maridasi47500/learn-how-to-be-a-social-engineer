@@ -28,5 +28,69 @@ INSERT OR IGNORE INTO contacts (contact_id, first_name, last_name, email, phone)
 VALUES( '2', 'anne onim', 'onim', 'anne.onim@email.com', '+86877779898');
 create table if not exists programminglanguage(
         id integer primary key autoincrement,
-        name text
+        name text,
+            short_name text
+      , created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP                );
+create table if not exists command_processing(
+        id integer primary key autoincrement,
+        programminglanguage_id text,
+            type text,
+            description text,
+            script_or_cli text
+      , created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP                );
+create table if not exists switch(
+        id integer primary key autoincrement,
+        name text,
+            programming_language_id text,
+            description text,
+            typeargument text
+      , created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP                );
+create table if not exists interprocess_communication(
+        id integer primary key autoincrement,
+        programminglanguage_id text,
+            name text,
+            description text,
+            script text
+      , created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP                );
+create table if not exists way_handle_insecure_data(
+        id integer primary key autoincrement,
+        programminglanguage_id text,
+            name text,
+            description text,
+            script text
+      , created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP                );
+create table if not exists way_handle_insecure_code(
+        id integer primary key autoincrement,
+        programminglanguage_id text,
+            name text,
+            description text,
+            script text
+      , created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP                );
+create table if not exists generate_other_language_in_the_programming_language(
+        id integer primary key autoincrement,
+        programminglanguage_id text,
+            otherprogramminglanguage_id text,
+            description text,
+            script text
+      , created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP                );
+create table if not exists generate_the_programming_language_from_other_language(
+        id integer primary key autoincrement,
+        programminglanguage_id text,
+            fromotherprogramminglanguage_id text,
+            description text,
+            script text
+      , created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP                );
+create table if not exists translate_the_programming_language_to_other_language(
+        id integer primary key autoincrement,
+        programminglanguage_id text,
+            otherprogramminglanguage_id text,
+            description text,
+            script text
+      , created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP                );
+create table if not exists embedprogramminglanguageinascript(
+        id integer primary key autoincrement,
+        programminglanguage_id text,
+            script_programminglanguage_id text,
+            description text,
+            script text
       , created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP                );
