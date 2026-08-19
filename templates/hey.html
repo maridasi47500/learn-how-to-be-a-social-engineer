@@ -1,9 +1,17 @@
+{% extends 'base.html' %}
+
+{% block montitre %}
+debut de mes mots: bienvenue dans social engineer
+{% endblock %}
+{% block content %}
 <h1># learn-how-to-be-a-social-engineer</h1>
-<p>
-    only with what is : browser, compiler, ou interpreter console
-    programming language(or framework)
-    have user 1 browser search, and link ou 1 progframming task , title and comment
-    learn hwo to be social engineer, hacker or developer without help of machine learning
-        other job: physical security
-remplri une base de données
-</p>
+{% for x in users | reverse %}
+ <li>{{ x["first_name"]  }}</li>
+
+{% endfor %} 
+fin de mes mots : popular web scripting languages like Perl, Ruby, PHP, and Python provide taint analysis
+{% endblock %}
+{% block liens %}
+<a href="/">welcome</a>
+{% endblock %}
+<a href="/add_one_programminglanguage"> add one programminglanguage</a>
